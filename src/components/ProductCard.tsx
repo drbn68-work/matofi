@@ -9,10 +9,62 @@ import { Badge } from "@/components/ui/badge";
 interface ProductCardProps {
   product: Product;
   onAddToCart: (product: Product, quantity: number) => void;
+  compact?: boolean;
 }
 
-export const ProductCard = ({ product, onAddToCart }: ProductCardProps) => {
+export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCardProps) => {
   const [quantity, setQuantity] = useState(1);
+
+  if (compact) {
+    return (
+      <Card className="overflow-hidden transition-all hover:shadow-lg">
+        <div className="flex items-center gap-4 p-4">
+          <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+            <img
+              src={product.image}
+              alt={product.name}
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="flex-grow">
+            <Badge variant="secondary" className="mb-1">
+              {product.category}
+            </Badge>
+            <h3 className="line-clamp-1 font-medium">{product.name}</h3>
+            <p className="text-sm text-gray-600">${product.price.toFixed(2)}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="h-7 w-7"
+              >
+                <Minus className="h-3 w-3" />
+              </Button>
+              <span className="w-6 text-center text-sm">{quantity}</span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setQuantity(quantity + 1)}
+                className="h-7 w-7"
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
+            <Button
+              onClick={() => onAddToCart(product, quantity)}
+              size="sm"
+              className="transition-all hover:scale-105"
+            >
+              Add
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden transition-all hover:shadow-lg">

@@ -7,11 +7,17 @@ import { products, categories } from "@/lib/data";
 import { CartItem, Product } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { Toggle } from "@/components/ui/toggle";
+import { LayoutGrid, LayoutList } from "lucide-react";
+
+const ITEMS_PER_PAGE = 8;
 
 const Index = () => {
   const [search, setSearch] = useState("");
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isGridView, setIsGridView] = useState(false);
   const { toast } = useToast();
 
   const filteredProducts = products.filter((product) => {
@@ -21,6 +27,12 @@ const Index = () => {
     const matchesCategory = !selectedCategory || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const pageCount = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const currentProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   const handleAddToCart = (product: Product, quantity: number) => {
     setCartItems((prev) => {
@@ -69,35 +81,60 @@ const Index = () => {
       </header>
 
       <main className="container pt-24">
-        <div className="mb-8 flex flex-wrap gap-2">
-          <Badge
-            variant={selectedCategory === null ? "default" : "outline"}
-            className="cursor-pointer"
-            onClick={() => setSelectedCategory(null)}
-          >
-            All
-          </Badge>
-          {categories.map((category) => (
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap gap-2">
             <Badge
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
+              variant={selectedCategory === null ? "default" : "outline"}
               className="cursor-pointer"
-              onClick={() => setSelectedCategory(category)}
+              onClick={() => setSelectedCategory(null)}
             >
-              {category}
+              All
             </Badge>
-          ))}
+            {categories.map((category) => (
+              <Badge
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                className="cursor-pointer"
+                onClick={() => setSelectedCategory(category)}
+              >
+                {category}
+              </Badge>
+            ))}
+          </div>
+          <Toggle
+            pressed={isGridView}
+            onPressedChange={setIsGridView}
+            aria-label="Toggle view"
+          >
+            {isGridView ? <LayoutGrid className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
+          </Toggle>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredProducts.map((product) => (
+        <div className={isGridView ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "flex flex-col gap-4"}>
+          {currentProducts.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
               onAddToCart={handleAddToCart}
+              compact={!isGridView}
             />
           ))}
         </div>
+
+        {pageCount > 1 && (
+          <div className="mt-8 flex justify-center gap-2">
+            {Array.from({ length: pageCount }).map((_, index) => (
+              <Badge
+                key={index}
+                variant={currentPage === index + 1 ? "default" : "outline"}
+                className="cursor-pointer"
+                onClick={() => setCurrentPage(index + 1)}
+              >
+                {index + 1}
+              </Badge>
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );

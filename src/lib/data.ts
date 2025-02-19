@@ -1,4 +1,3 @@
-
 import { Product } from "./types";
 
 export const products: Product[] = [
@@ -56,6 +55,60 @@ export const products: Product[] = [
     price: 7.99,
     stock: 150,
   },
+  {
+    id: "7",
+    name: "Copy Paper - Premium",
+    description: "Premium quality copy paper for professional printing",
+    category: "Paper",
+    image: "/placeholder.svg",
+    price: 11.99,
+    stock: 800,
+  },
+  {
+    id: "8",
+    name: "Disposable Face Shields",
+    description: "Pack of 20 medical-grade face shields",
+    category: "Safety",
+    image: "/placeholder.svg",
+    price: 24.99,
+    stock: 150,
+  },
+  {
+    id: "9",
+    name: "Gel Pens Set",
+    description: "Set of 24 colored gel pens",
+    category: "Writing",
+    image: "/placeholder.svg",
+    price: 12.99,
+    stock: 300,
+  },
+  {
+    id: "10",
+    name: "Disposable Gowns",
+    description: "Pack of 10 disposable medical gowns",
+    category: "Safety",
+    image: "/placeholder.svg",
+    price: 34.99,
+    stock: 200,
+  },
+  {
+    id: "11",
+    name: "Stapler Set",
+    description: "Professional stapler with 1000 staples",
+    category: "Office",
+    image: "/placeholder.svg",
+    price: 18.99,
+    stock: 150,
+  },
+  {
+    id: "12",
+    name: "File Folders",
+    description: "Pack of 100 letter-size file folders",
+    category: "Paper",
+    image: "/placeholder.svg",
+    price: 15.99,
+    stock: 400,
+  }
 ];
 
 export const categories = [...new Set(products.map((p) => p.category))];
