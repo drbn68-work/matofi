@@ -47,7 +47,7 @@ const Index = () => {
       return [...prev, { product, quantity }];
     });
     toast({
-      title: "Added to cart",
+      title: "Material afegit",
       description: `${quantity} x ${product.name}`,
     });
   };
@@ -58,8 +58,8 @@ const Index = () => {
 
   const handleCheckout = () => {
     toast({
-      title: "Order placed",
-      description: "Your order has been placed successfully!",
+      title: "Sol·licitud enviada",
+      description: "La teva sol·licitud ha estat enviada correctament!",
     });
     setCartItems([]);
   };
@@ -68,7 +68,7 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="fixed top-0 z-10 w-full border-b bg-white/80 backdrop-blur-md">
         <div className="container flex items-center justify-between py-4">
-          <h1 className="text-2xl font-bold text-primary">Supply Hub</h1>
+          <h1 className="text-2xl font-bold text-primary">Material d'Oficina</h1>
           <div className="flex items-center gap-4">
             <SearchBar value={search} onChange={setSearch} />
             <CartPreview
@@ -88,7 +88,7 @@ const Index = () => {
               className="cursor-pointer"
               onClick={() => setSelectedCategory(null)}
             >
-              All
+              Tot
             </Badge>
             {categories.map((category) => (
               <Badge
@@ -104,7 +104,7 @@ const Index = () => {
           <Toggle
             pressed={isGridView}
             onPressedChange={setIsGridView}
-            aria-label="Toggle view"
+            aria-label="Canviar vista"
           >
             {isGridView ? <LayoutGrid className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
           </Toggle>

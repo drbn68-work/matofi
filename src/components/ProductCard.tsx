@@ -31,7 +31,6 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
               {product.category}
             </Badge>
             <h3 className="line-clamp-1 font-medium">{product.name}</h3>
-            <p className="text-sm text-gray-600">${product.price.toFixed(2)}</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -58,7 +57,7 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
               size="sm"
               className="transition-all hover:scale-105"
             >
-              Add
+              Afegir
             </Button>
           </div>
         </div>
@@ -85,7 +84,6 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
         <p className="mt-2 line-clamp-2 text-sm text-gray-600">
           {product.description}
         </p>
-        <p className="mt-4 text-lg font-semibold">${product.price.toFixed(2)}</p>
       </CardContent>
       <CardFooter className="flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
@@ -111,7 +109,7 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
           onClick={() => onAddToCart(product, quantity)}
           className="transition-all hover:scale-105"
         >
-          Add to Cart
+          Sol·licitar
         </Button>
       </CardFooter>
     </Card>

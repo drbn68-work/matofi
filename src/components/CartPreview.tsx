@@ -20,11 +20,6 @@ interface CartPreviewProps {
 }
 
 export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) => {
-  const total = items.reduce(
-    (sum, item) => sum + item.product.price * item.quantity,
-    0
-  );
-
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -42,7 +37,7 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Shopping Cart</SheetTitle>
+          <SheetTitle>Sol·licitud de Material</SheetTitle>
         </SheetHeader>
         <ScrollArea className="h-[calc(100vh-200px)] pr-4">
           {items.map((item) => (
@@ -51,10 +46,7 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
                 <div>
                   <h3 className="font-medium">{item.product.name}</h3>
                   <p className="text-sm text-gray-600">
-                    Quantity: {item.quantity}
-                  </p>
-                  <p className="text-sm font-medium">
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    Quantitat: {item.quantity}
                   </p>
                 </div>
                 <Button
@@ -70,19 +62,13 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
           ))}
         </ScrollArea>
         <div className="mt-4">
-          <div className="flex items-center justify-between py-4">
-            <span className="text-lg font-medium">Total</span>
-            <span className="text-lg font-bold">
-              ${total.toFixed(2)}
-            </span>
-          </div>
           <Button
             className="w-full"
             size="lg"
             onClick={onCheckout}
             disabled={items.length === 0}
           >
-            Checkout
+            Enviar Sol·licitud
           </Button>
         </div>
       </SheetContent>
