@@ -110,13 +110,14 @@
 @media print {
   @page {
     margin: 1.5cm;
-    size: A4;
+    size: A4 portrait;
   }
   
-  body {
+  html, body {
     margin: 0 !important;
     padding: 0 !important;
-    width: 100% !important;
+    width: 100vw !important;
+    min-height: 100vh !important;
   }
 
   #root {
@@ -124,6 +125,11 @@
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
+  }
+
+  [role="dialog"] {
+    position: relative !important;
+    transform: none !important;
   }
 
   .print\:hidden {
@@ -134,8 +140,29 @@
     width: 100% !important;
   }
 
+  .print\:w-screen {
+    width: 100vw !important;
+  }
+
   .print\:max-w-none {
     max-width: none !important;
+  }
+
+  .print\:m-0 {
+    margin: 0 !important;
+  }
+
+  .print\:mx-0 {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .print\:p-0 {
+    padding: 0 !important;
+  }
+
+  .print\:h-auto {
+    height: auto !important;
   }
 
   .print\:text-base {
@@ -153,28 +180,20 @@
     margin-bottom: 1rem !important;
   }
 
+  .print\:my-6 {
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
   .print\:mb-8 {
     margin-bottom: 2rem !important;
   }
 
-  .print\:space-y-2 > * + * {
-    margin-top: 0.5rem !important;
-  }
-
-  .print\:space-y-3 > * + * {
-    margin-top: 0.75rem !important;
+  .print\:space-y-4 > * + * {
+    margin-top: 1rem !important;
   }
 
   .print\:border-none {
     border: none !important;
-  }
-
-  .print\:p-0 {
-    padding: 0 !important;
-  }
-
-  .print\:mx-0 {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
   }
 }
