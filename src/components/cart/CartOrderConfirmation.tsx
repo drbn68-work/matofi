@@ -22,7 +22,7 @@ export const CartOrderConfirmation = ({
   };
 
   return (
-    <div className="print:h-screen print:w-full print:m-0 print:p-0">
+    <div className="min-h-screen bg-background">
       <div className="max-w-2xl mx-auto p-6 print:max-w-none print:w-full print:m-0 print:p-4">
         <div className="text-center mb-8 print:hidden">
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
