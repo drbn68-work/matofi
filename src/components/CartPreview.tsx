@@ -27,6 +27,9 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
   const [comments, setComments] = useState("");
   const { toast } = useToast();
 
+  // Calculamos el total de artículos
+  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
+
   // Simulación de datos del usuario - En una implementación real vendrían del contexto de autenticación
   const userInfo = {
     fullName: "David Robson",
@@ -56,21 +59,21 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
               variant="destructive"
               className="absolute -right-2 -top-2 h-5 w-5 rounded-full p-0"
             >
-              {items.length}
+              {totalItems}
             </Badge>
           )}
         </Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Sol·licitud de Material</SheetTitle>
+          <SheetTitle>Sol·licitud de Material ({totalItems} articles)</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <div className="mt-4 space-y-4">
           {/* Información del solicitante */}
-          <div className="rounded-lg border p-4">
-            <h3 className="mb-4 font-semibold">Informació sol·licitant</h3>
-            <div className="space-y-2 text-sm">
+          <div className="rounded-lg border p-3">
+            <h3 className="mb-2 font-semibold">Informació sol·licitant</h3>
+            <div className="space-y-1 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Centre de cost:</span>
                 <span className="font-medium">{userInfo.costCenter} {userInfo.department}</span>
@@ -83,31 +86,36 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
           </div>
 
           {/* Lista de items */}
-          <ScrollArea className="h-[200px] pr-4">
-            {items.map((item) => (
-              <div key={item.product.id} className="py-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">{item.product.name}</h3>
-                    <p className="text-sm text-gray-600">
-                      Quantitat: {item.quantity}
-                    </p>
+          <div className="rounded-lg border">
+            <ScrollArea className="h-[250px] rounded-md" type="always">
+              <div className="p-2">
+                {items.map((item) => (
+                  <div key={item.product.id} className="py-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm truncate">{item.product.name}</h3>
+                        <p className="text-xs text-gray-600">
+                          Quantitat: {item.quantity}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => onRemove(item.product.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Separator className="mt-2" />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onRemove(item.product.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Separator className="mt-4" />
+                ))}
               </div>
-            ))}
-          </ScrollArea>
+            </ScrollArea>
+          </div>
 
           {/* Campos de entrega y comentarios */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="space-y-2">
               <label htmlFor="delivery" className="text-sm font-medium">
                 Lloc de lliurament *
@@ -134,7 +142,7 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
           </div>
 
           <Button
-            className="w-full"
+            className="w-full mt-4"
             size="lg"
             onClick={handleSubmit}
             disabled={items.length === 0}
