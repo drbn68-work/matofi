@@ -1,9 +1,7 @@
 
 import { Check, Printer } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import { CartItem } from "@/lib/types";
 import { UserInfo } from "./types";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 
 interface CartOrderConfirmationProps {
@@ -24,74 +22,78 @@ export const CartOrderConfirmation = ({
   };
 
   return (
-    <div className="print:w-screen print:max-w-none print:m-0 print:p-0">
-      <ScrollArea className="h-[calc(100vh-10rem)] print:h-auto">
-        <div className="max-w-2xl mx-auto space-y-6 print:max-w-none print:w-full print:mx-0">
-          <div className="text-center print:mb-8">
-            <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center print:hidden">
-              <Check className="h-6 w-6 text-green-600" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Comanda Realitzada</h2>
-            <p className="text-gray-600 mb-2">La seva comanda ha estat enviada correctament</p>
-            <Button 
-              variant="outline" 
-              onClick={handlePrint}
-              className="mt-2 print:hidden"
-            >
-              <Printer className="mr-2" />
-              Imprimir Confirmació
-            </Button>
+    <div className="print:h-screen print:w-full print:m-0 print:p-0">
+      <div className="max-w-2xl mx-auto p-6 print:max-w-none print:w-full print:m-0 print:p-4">
+        <div className="text-center mb-8 print:hidden">
+          <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+            <Check className="h-6 w-6 text-green-600" />
           </div>
-
-          <div className="rounded-lg border p-6 space-y-6 print:border-none print:p-0">
-            <div>
-              <h3 className="font-medium mb-4 print:text-lg">Informació del sol·licitant</h3>
-              <div className="space-y-3 print:space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm print:text-base">
-                  <span className="text-gray-600">Centre de cost:</span>
-                  <span className="text-right">{userInfo.costCenter} {userInfo.department}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-sm print:text-base">
-                  <span className="text-gray-600">Demanat per:</span>
-                  <span className="text-right">{userInfo.fullName}</span>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="print:my-6" />
-
-            <div>
-              <h3 className="font-medium mb-4 print:text-lg">Detalls de l'entrega</h3>
-              <div className="space-y-3 print:space-y-4">
-                <div className="grid grid-cols-2 gap-4 text-sm print:text-base">
-                  <span className="text-gray-600">Lloc de lliurament:</span>
-                  <span className="text-right">{deliveryLocation}</span>
-                </div>
-                {comments && (
-                  <div className="grid grid-cols-2 gap-4 text-sm print:text-base">
-                    <span className="text-gray-600">Comentaris:</span>
-                    <span className="text-right">{comments}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <Separator className="print:my-6" />
-
-            <div>
-              <h3 className="font-medium mb-4 print:text-lg">Articles sol·licitats</h3>
-              <div className="space-y-3 print:space-y-4">
-                {items.map((item) => (
-                  <div key={item.product.id} className="grid grid-cols-2 gap-4 text-sm print:text-base items-center">
-                    <span>{item.product.name}</span>
-                    <span className="text-right text-gray-600">{item.quantity} unitats</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <h2 className="text-xl font-semibold mb-2">Comanda Realitzada</h2>
+          <p className="text-gray-600 mb-4">La seva comanda ha estat enviada correctament</p>
+          <Button 
+            variant="outline" 
+            onClick={handlePrint}
+            className="mt-2"
+          >
+            <Printer className="mr-2" />
+            Imprimir Confirmació
+          </Button>
         </div>
-      </ScrollArea>
+
+        <div className="print:block">
+          <h1 className="text-xl font-semibold mb-4 print:mb-6 text-center hidden print:block">Sol·licitud de Material ({items.length} articles)</h1>
+          
+          <table className="w-full print:text-sm">
+            <thead>
+              <tr>
+                <th colSpan={2} className="pb-4 text-left font-medium text-lg">Informació del sol·licitant</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="py-2 text-gray-600">Centre de cost:</td>
+                <td className="py-2 text-right">{userInfo.costCenter} {userInfo.department}</td>
+              </tr>
+              <tr>
+                <td className="py-2 text-gray-600">Demanat per:</td>
+                <td className="py-2 text-right">{userInfo.fullName}</td>
+              </tr>
+            </tbody>
+
+            <thead>
+              <tr>
+                <th colSpan={2} className="pt-6 pb-4 text-left font-medium text-lg">Detalls de l'entrega</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="py-2 text-gray-600">Lloc de lliurament:</td>
+                <td className="py-2 text-right">{deliveryLocation}</td>
+              </tr>
+              {comments && (
+                <tr>
+                  <td className="py-2 text-gray-600">Comentaris:</td>
+                  <td className="py-2 text-right">{comments}</td>
+                </tr>
+              )}
+            </tbody>
+
+            <thead>
+              <tr>
+                <th colSpan={2} className="pt-6 pb-4 text-left font-medium text-lg">Articles sol·licitats</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.product.id}>
+                  <td className="py-2">{item.product.name}</td>
+                  <td className="py-2 text-right text-gray-600">{item.quantity} unitats</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };
