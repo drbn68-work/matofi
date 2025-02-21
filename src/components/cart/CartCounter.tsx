@@ -8,7 +8,7 @@ interface CartCounterProps {
 }
 
 export const CartCounter = ({ itemCount }: CartCounterProps) => (
-  <Button variant="outline" size="icon" className="relative">
+  <Button variant="outline" size="icon" className="relative" type="button">
     <ShoppingCart className="h-5 w-5" />
     {itemCount > 0 && (
       <Badge
