@@ -1,5 +1,5 @@
 
-import { Check, Printer, X, CheckSquare } from "lucide-react";
+import { Check, Printer, X, Square } from "lucide-react";
 import { CartItem } from "@/lib/types";
 import { UserInfo } from "./types";
 import { Button } from "@/components/ui/button";
@@ -108,7 +108,7 @@ export const CartOrderConfirmation = ({
                   <td className="py-2">{item.product.name}</td>
                   <td className="py-2 text-right flex items-center justify-end gap-2">
                     {item.quantity} unitats 
-                    <CheckSquare className="h-5 w-5 text-gray-400" />
+                    <Square className="h-5 w-5 text-gray-400" />
                   </td>
                 </tr>
               ))}
