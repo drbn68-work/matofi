@@ -1,21 +1,24 @@
 
-import { Check, Printer } from "lucide-react";
+import { Check, Printer, X, CheckSquare } from "lucide-react";
 import { CartItem } from "@/lib/types";
 import { UserInfo } from "./types";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 interface CartOrderConfirmationProps {
   items: CartItem[];
   userInfo: UserInfo;
   deliveryLocation: string;
   comments: string;
+  onClose?: () => void;
 }
 
 export const CartOrderConfirmation = ({ 
   items, 
   userInfo, 
   deliveryLocation, 
-  comments 
+  comments,
+  onClose 
 }: CartOrderConfirmationProps) => {
   const handlePrint = () => {
     window.print();
@@ -24,7 +27,15 @@ export const CartOrderConfirmation = ({
   return (
     <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
       <div className="max-w-2xl mx-auto p-6">
-        <div className="text-center mb-8 no-print">
+        <div className="text-center mb-8 no-print relative">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={onClose}
+            className="absolute right-0 top-0"
+          >
+            <X className="h-6 w-6" />
+          </Button>
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
             <Check className="h-6 w-6 text-green-600" />
           </div>
@@ -59,10 +70,14 @@ export const CartOrderConfirmation = ({
                 <td className="py-2 text-right">{userInfo.fullName}</td>
               </tr>
             </tbody>
+          </table>
 
+          <Separator className="my-6" />
+
+          <table className="w-full">
             <thead>
               <tr>
-                <th colSpan={2} className="pt-6 pb-4 text-left font-medium text-lg">Detalls de l'entrega</th>
+                <th colSpan={2} className="pb-4 text-left font-medium text-lg">Detalls de l'entrega</th>
               </tr>
             </thead>
             <tbody>
@@ -77,17 +92,24 @@ export const CartOrderConfirmation = ({
                 </tr>
               )}
             </tbody>
+          </table>
 
+          <Separator className="my-6" />
+
+          <table className="w-full">
             <thead>
               <tr>
-                <th colSpan={2} className="pt-6 pb-4 text-left font-medium text-lg">Articles sol·licitats</th>
+                <th colSpan={2} className="pb-4 text-left font-medium text-lg">Articles sol·licitats</th>
               </tr>
             </thead>
             <tbody>
               {items.map((item) => (
                 <tr key={item.product.id}>
                   <td className="py-2">{item.product.name}</td>
-                  <td className="py-2 text-right text-gray-600">{item.quantity} unitats</td>
+                  <td className="py-2 text-right flex items-center justify-end gap-2">
+                    {item.quantity} unitats 
+                    <CheckSquare className="h-5 w-5 text-gray-400" />
+                  </td>
                 </tr>
               ))}
             </tbody>
