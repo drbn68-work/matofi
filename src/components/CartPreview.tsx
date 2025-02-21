@@ -56,7 +56,7 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
 
   return (
     <Sheet>
-      <SheetTrigger asChild>
+      <SheetTrigger>
         <CartCounter itemCount={totalItems} />
       </SheetTrigger>
       <SheetContent>
