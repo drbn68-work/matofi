@@ -1,4 +1,3 @@
-
 import { CartItem } from "@/lib/types";
 import {
   Sheet,
@@ -37,20 +36,7 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
     email: "drobson@fundacio-puigvert.es"
   };
 
-  const formatOrderDetails = () => {
-    return {
-      userInfo,
-      deliveryLocation,
-      comments,
-      items: items.map(item => ({
-        name: item.product.name,
-        quantity: item.quantity
-      })),
-      timestamp: new Date().toISOString()
-    };
-  };
-
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!deliveryLocation.trim()) {
       toast({
         variant: "destructive",
@@ -60,34 +46,13 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
       return;
     }
 
-    try {
-      const orderDetails = formatOrderDetails();
-      
-      // Aquí deberás reemplazar esta URL con la de tu backend
-      const response = await fetch('YOUR_BACKEND_URL/send-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderDetails)
-      });
-
-      if (!response.ok) throw new Error('Error al enviar la comanda');
-
-      setIsSubmitted(true);
-      onCheckout();
-      
-      toast({
-        title: "Èxit",
-        description: "Comanda realitzada correctament",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Error al processar la comanda. Si us plau, torna-ho a provar.",
-      });
-    }
+    setIsSubmitted(true);
+    onCheckout();
+    
+    toast({
+      title: "Èxit",
+      description: "Comanda realitzada correctament",
+    });
   };
 
   const OrderConfirmation = () => (
