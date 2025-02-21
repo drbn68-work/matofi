@@ -13,7 +13,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCardProps) => {
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
 
   if (compact) {
     return (
@@ -37,7 +37,7 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                onClick={() => setQuantity(Math.max(0, quantity - 1))}
                 className="h-7 w-7"
               >
                 <Minus className="h-3 w-3" />
@@ -56,6 +56,7 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
               onClick={() => onAddToCart(product, quantity)}
               size="sm"
               className="transition-all hover:scale-105"
+              disabled={quantity === 0}
             >
               Afegir
             </Button>
@@ -90,7 +91,7 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
           <Button
             variant="outline"
             size="icon"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            onClick={() => setQuantity(Math.max(0, quantity - 1))}
             className="h-8 w-8"
           >
             <Minus className="h-4 w-4" />
@@ -108,6 +109,7 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
         <Button
           onClick={() => onAddToCart(product, quantity)}
           className="transition-all hover:scale-105"
+          disabled={quantity === 0}
         >
           Sol·licitar
         </Button>
