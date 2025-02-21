@@ -8,7 +8,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Trash2 } from "lucide-react";
+import { ShoppingCart, Trash2, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -25,19 +25,32 @@ interface CartPreviewProps {
 export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) => {
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [comments, setComments] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
 
-  // Calculamos el total de artículos
   const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Simulación de datos del usuario - En una implementación real vendrían del contexto de autenticación
   const userInfo = {
     fullName: "David Robson",
     department: "Servei d'Informàtica",
-    costCenter: "5220"
+    costCenter: "5220",
+    email: "drobson@fundacio-puigvert.es"
   };
 
-  const handleSubmit = () => {
+  const formatOrderDetails = () => {
+    return {
+      userInfo,
+      deliveryLocation,
+      comments,
+      items: items.map(item => ({
+        name: item.product.name,
+        quantity: item.quantity
+      })),
+      timestamp: new Date().toISOString()
+    };
+  };
+
+  const handleSubmit = async () => {
     if (!deliveryLocation.trim()) {
       toast({
         variant: "destructive",
@@ -46,8 +59,74 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
       });
       return;
     }
-    onCheckout();
+
+    try {
+      const orderDetails = formatOrderDetails();
+      
+      // Aquí deberás reemplazar esta URL con la de tu backend
+      const response = await fetch('YOUR_BACKEND_URL/send-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderDetails)
+      });
+
+      if (!response.ok) throw new Error('Error al enviar la comanda');
+
+      setIsSubmitted(true);
+      onCheckout();
+      
+      toast({
+        title: "Èxit",
+        description: "Comanda realitzada correctament",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error al processar la comanda. Si us plau, torna-ho a provar.",
+      });
+    }
   };
+
+  const OrderConfirmation = () => (
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
+          <Check className="h-6 w-6 text-green-600" />
+        </div>
+        <h2 className="text-xl font-semibold mb-2">Comanda Realitzada</h2>
+        <p className="text-gray-600 mb-6">La seva comanda ha estat enviada correctament</p>
+      </div>
+
+      <div className="rounded-lg border p-4 space-y-4">
+        <div>
+          <h3 className="font-medium mb-2">Informació del sol·licitant</h3>
+          <p className="text-sm">Centre de cost: {userInfo.costCenter} {userInfo.department}</p>
+          <p className="text-sm">Demanat per: {userInfo.fullName}</p>
+        </div>
+
+        <div>
+          <h3 className="font-medium mb-2">Detalls de l'entrega</h3>
+          <p className="text-sm">Lloc de lliurament: {deliveryLocation}</p>
+          {comments && <p className="text-sm">Comentaris: {comments}</p>}
+        </div>
+
+        <div>
+          <h3 className="font-medium mb-2">Articles sol·licitats</h3>
+          <div className="space-y-2">
+            {items.map((item) => (
+              <div key={item.product.id} className="flex items-center gap-2 text-sm">
+                <div className="h-4 w-4 border rounded-sm flex-shrink-0" />
+                <span>{item.quantity}x {item.product.name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <Sheet>
@@ -69,87 +148,91 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
           <SheetTitle>Sol·licitud de Material ({totalItems} articles)</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-4 space-y-4">
-          {/* Información del solicitante */}
-          <div className="rounded-lg border p-3">
-            <h3 className="mb-2 font-semibold">Informació sol·licitant</h3>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Centre de cost:</span>
-                <span className="font-medium">{userInfo.costCenter} {userInfo.department}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Demanat per:</span>
-                <span className="font-medium">{userInfo.fullName}</span>
+        {!isSubmitted ? (
+          <div className="mt-4 space-y-4">
+            {/* Información del solicitante */}
+            <div className="rounded-lg border p-3">
+              <h3 className="mb-2 font-semibold">Informació sol·licitant</h3>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Centre de cost:</span>
+                  <span className="font-medium">{userInfo.costCenter} {userInfo.department}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Demanat per:</span>
+                  <span className="font-medium">{userInfo.fullName}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Lista de items */}
-          <div className="rounded-lg border">
-            <ScrollArea className="h-[250px] rounded-md" type="always">
-              <div className="p-2">
-                {items.map((item) => (
-                  <div key={item.product.id} className="py-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-sm truncate">{item.product.name}</h3>
-                        <p className="text-xs text-gray-600">
-                          Quantitat: {item.quantity}
-                        </p>
+            {/* Lista de items */}
+            <div className="rounded-lg border">
+              <ScrollArea className="h-[250px] rounded-md" type="always">
+                <div className="p-2">
+                  {items.map((item) => (
+                    <div key={item.product.id} className="py-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm truncate">{item.product.name}</h3>
+                          <p className="text-xs text-gray-600">
+                            Quantitat: {item.quantity}
+                          </p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => onRemove(item.product.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => onRemove(item.product.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <Separator className="mt-2" />
                     </div>
-                    <Separator className="mt-2" />
-                  </div>
-                ))}
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Campos de entrega y comentarios */}
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <label htmlFor="delivery" className="text-sm font-medium">
+                  Lloc de lliurament *
+                </label>
+                <Input
+                  id="delivery"
+                  value={deliveryLocation}
+                  onChange={(e) => setDeliveryLocation(e.target.value)}
+                  placeholder="Introdueix el lloc de lliurament"
+                  required
+                />
               </div>
-            </ScrollArea>
-          </div>
-
-          {/* Campos de entrega y comentarios */}
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <label htmlFor="delivery" className="text-sm font-medium">
-                Lloc de lliurament *
-              </label>
-              <Input
-                id="delivery"
-                value={deliveryLocation}
-                onChange={(e) => setDeliveryLocation(e.target.value)}
-                placeholder="Introdueix el lloc de lliurament"
-                required
-              />
+              <div className="space-y-2">
+                <label htmlFor="comments" className="text-sm font-medium">
+                  Comentaris
+                </label>
+                <Input
+                  id="comments"
+                  value={comments}
+                  onChange={(e) => setComments(e.target.value)}
+                  placeholder="Comentaris opcionals"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <label htmlFor="comments" className="text-sm font-medium">
-                Comentaris
-              </label>
-              <Input
-                id="comments"
-                value={comments}
-                onChange={(e) => setComments(e.target.value)}
-                placeholder="Comentaris opcionals"
-              />
-            </div>
-          </div>
 
-          <Button
-            className="w-full mt-4"
-            size="lg"
-            onClick={handleSubmit}
-            disabled={items.length === 0}
-          >
-            Enviar Sol·licitud
-          </Button>
-        </div>
+            <Button
+              className="w-full mt-4"
+              size="lg"
+              onClick={handleSubmit}
+              disabled={items.length === 0}
+            >
+              Enviar Sol·licitud
+            </Button>
+          </div>
+        ) : (
+          <OrderConfirmation />
+        )}
       </SheetContent>
     </Sheet>
   );
