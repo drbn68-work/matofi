@@ -68,7 +68,14 @@ const Index = () => {
     <div className="min-h-screen bg-gray-50">
       <header className="fixed top-0 z-10 w-full border-b bg-white/80 backdrop-blur-md">
         <div className="container flex items-center justify-between py-4">
-          <h1 className="text-2xl font-bold text-primary">Material d'Oficina</h1>
+          <div className="flex items-center gap-4">
+            <img 
+              src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png" 
+              alt="Fundació Puigvert" 
+              className="h-12"
+            />
+            <h1 className="text-2xl font-bold text-primary">Material d'Oficina</h1>
+          </div>
           <div className="flex items-center gap-4">
             <SearchBar value={search} onChange={setSearch} />
             <CartPreview
