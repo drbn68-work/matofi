@@ -24,9 +24,12 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [comments, setComments] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedItems, setSubmittedItems] = useState<CartItem[]>([]);
   const { toast } = useToast();
 
-  const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
+  const totalItems = isSubmitted 
+    ? submittedItems.reduce((acc, item) => acc + item.quantity, 0)
+    : items.reduce((acc, item) => acc + item.quantity, 0);
 
   const userInfo: UserInfo = {
     fullName: "David Robson",
@@ -45,6 +48,7 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
       return;
     }
 
+    setSubmittedItems([...items]);
     setIsSubmitted(true);
     onCheckout();
     
@@ -66,7 +70,7 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
 
         {isSubmitted ? (
           <CartOrderConfirmation
-            items={items}
+            items={submittedItems}
             userInfo={userInfo}
             deliveryLocation={deliveryLocation}
             comments={comments}
