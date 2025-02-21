@@ -119,21 +119,17 @@
     background: none !important;
   }
 
-  body * {
-    display: none;
+  .print-content {
+    display: block !important;
+    visibility: visible !important;
   }
 
-  .print-content,
   .print-content * {
-    display: block !important;
+    visibility: visible !important;
   }
 
-  .print\:hidden {
+  body > *:not(.print-content) {
     display: none !important;
-  }
-
-  .print\:block {
-    display: block !important;
   }
 
   #root {
@@ -154,17 +150,5 @@
 
   td:last-child {
     text-align: right !important;
-  }
-
-  .container {
-    max-width: none !important;
-    padding: 0 !important;
-  }
-
-  [role="dialog"] {
-    position: static !important;
-    transform: none !important;
-    height: auto !important;
-    width: auto !important;
   }
 }

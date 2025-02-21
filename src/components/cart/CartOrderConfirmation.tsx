@@ -22,8 +22,8 @@ export const CartOrderConfirmation = ({
   };
 
   return (
-    <div className="min-h-screen bg-background overflow-auto">
-      <div className="container py-6">
+    <div className="h-[calc(100vh-2rem)] overflow-y-auto bg-background p-4">
+      <div className="print-content">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8 print:hidden">
             <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
@@ -41,7 +41,7 @@ export const CartOrderConfirmation = ({
             </Button>
           </div>
 
-          <div className="print:block print-content">
+          <div>
             <h1 className="text-xl font-semibold mb-4 print:mb-6 text-center hidden print:block">Sol·licitud de Material ({items.length} articles)</h1>
             
             <table className="w-full print:text-sm">
