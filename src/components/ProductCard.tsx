@@ -4,6 +4,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button";
 import { Plus, Minus } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface ProductCardProps {
   product: Product;
@@ -26,6 +27,9 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
             />
           </div>
           <div className="flex-grow">
+            <Badge variant="secondary" className="mb-1">
+              {product.category}
+            </Badge>
             <h3 className="line-clamp-1 font-medium">{product.name}</h3>
           </div>
           <div className="flex items-center gap-2">
@@ -74,6 +78,9 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
         </div>
       </CardHeader>
       <CardContent className="p-4">
+        <Badge variant="secondary" className="mb-2">
+          {product.category}
+        </Badge>
         <CardTitle className="line-clamp-1 text-lg">{product.name}</CardTitle>
         <p className="mt-2 line-clamp-2 text-sm text-gray-600">
           {product.description}
