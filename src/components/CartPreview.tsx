@@ -1,3 +1,4 @@
+
 import { CartItem } from "@/lib/types";
 import {
   Sheet,
@@ -68,23 +69,48 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
       <div className="rounded-lg border p-4 space-y-4">
         <div>
           <h3 className="font-medium mb-2">Informació del sol·licitant</h3>
-          <p className="text-sm">Centre de cost: {userInfo.costCenter} {userInfo.department}</p>
-          <p className="text-sm">Demanat per: {userInfo.fullName}</p>
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Centre de cost:</span>
+              <span>{userInfo.costCenter} {userInfo.department}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Demanat per:</span>
+              <span>{userInfo.fullName}</span>
+            </div>
+          </div>
         </div>
+
+        <Separator />
 
         <div>
           <h3 className="font-medium mb-2">Detalls de l'entrega</h3>
-          <p className="text-sm">Lloc de lliurament: {deliveryLocation}</p>
-          {comments && <p className="text-sm">Comentaris: {comments}</p>}
+          <div className="space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Lloc de lliurament:</span>
+              <span>{deliveryLocation}</span>
+            </div>
+            {comments && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Comentaris:</span>
+                <span>{comments}</span>
+              </div>
+            )}
+          </div>
         </div>
+
+        <Separator />
 
         <div>
           <h3 className="font-medium mb-2">Articles sol·licitats</h3>
           <div className="space-y-2">
             {items.map((item) => (
-              <div key={item.product.id} className="flex items-center gap-2 text-sm">
+              <div key={item.product.id} className="flex items-center gap-3 text-sm">
                 <div className="h-4 w-4 border rounded-sm flex-shrink-0" />
-                <span>{item.quantity}x {item.product.name}</span>
+                <div className="flex justify-between w-full">
+                  <span>{item.product.name}</span>
+                  <span className="text-gray-600">{item.quantity} unitats</span>
+                </div>
               </div>
             ))}
           </div>
