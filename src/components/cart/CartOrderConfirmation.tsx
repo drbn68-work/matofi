@@ -22,8 +22,8 @@ export const CartOrderConfirmation = ({
   };
 
   return (
-    <div className="h-[calc(100vh-2rem)] overflow-y-auto bg-background p-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="fixed inset-0 bg-white z-50 overflow-y-auto">
+      <div className="max-w-2xl mx-auto p-6">
         <div className="text-center mb-8 no-print">
           <div className="mx-auto mb-4 h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
             <Check className="h-6 w-6 text-green-600" />
@@ -40,8 +40,8 @@ export const CartOrderConfirmation = ({
           </Button>
         </div>
 
-        <div>
-          <h1 className="text-xl font-semibold mb-4 text-center print-only">Sol·licitud de Material ({items.length} articles)</h1>
+        <div className="print-area">
+          <h1 className="text-xl font-semibold mb-4 text-center">Sol·licitud de Material ({items.length} articles)</h1>
           
           <table className="w-full">
             <thead>
