@@ -50,7 +50,9 @@ export const CartReviewForm = ({
             <div key={item.product.id} className="py-2">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-sm truncate">{item.product.name}</h3>
+                  <h3 className="font-medium text-sm truncate">
+                    <span className="text-gray-600">{item.product.code}</span> - {item.product.name}
+                  </h3>
                   <p className="text-xs text-gray-600">
                     Quantitat: {item.quantity}
                   </p>
