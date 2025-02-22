@@ -54,7 +54,7 @@ export const CartOrderConfirmation = ({
         <div className="print-area">
           <h1 className="text-xl font-semibold mb-4 text-center">Sol·licitud de Material ({items.length} articles)</h1>
           
-          <table className="w-full">
+          <table className="w-full mb-8">
             <thead>
               <tr>
                 <th colSpan={2} className="pb-4 text-left font-medium text-lg">Informació del sol·licitant</th>
@@ -72,9 +72,9 @@ export const CartOrderConfirmation = ({
             </tbody>
           </table>
 
-          <Separator className="my-6" />
+          <Separator className="my-8 h-0.5 bg-gray-300" />
 
-          <table className="w-full">
+          <table className="w-full mb-8">
             <thead>
               <tr>
                 <th colSpan={2} className="pb-4 text-left font-medium text-lg">Detalls de l'entrega</th>
@@ -94,7 +94,7 @@ export const CartOrderConfirmation = ({
             </tbody>
           </table>
 
-          <Separator className="my-6" />
+          <Separator className="my-8 h-0.5 bg-gray-300" />
 
           <table className="w-full">
             <thead>
