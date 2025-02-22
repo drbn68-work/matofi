@@ -30,7 +30,9 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
             <Badge variant="secondary" className="mb-1">
               {product.category}
             </Badge>
-            <h3 className="line-clamp-1 font-medium">{product.name}</h3>
+            <h3 className="line-clamp-1 font-medium">
+              {product.name} <span className="text-sm text-gray-500">({product.code})</span>
+            </h3>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -81,7 +83,9 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
         <Badge variant="secondary" className="mb-2">
           {product.category}
         </Badge>
-        <CardTitle className="line-clamp-1 text-lg">{product.name}</CardTitle>
+        <CardTitle className="line-clamp-1 text-lg">
+          {product.name} <span className="text-sm text-gray-500">({product.code})</span>
+        </CardTitle>
         <p className="mt-2 line-clamp-2 text-sm text-gray-600">
           {product.description}
         </p>

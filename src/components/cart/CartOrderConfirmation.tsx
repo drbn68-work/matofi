@@ -72,7 +72,7 @@ export const CartOrderConfirmation = ({
             </tbody>
           </table>
 
-          <Separator className="my-8 h-0.5 bg-gray-300" />
+          <hr className="my-8 border-t-2 border-gray-300 print:border-gray-400" />
 
           <table className="w-full mb-8">
             <thead>
@@ -94,7 +94,7 @@ export const CartOrderConfirmation = ({
             </tbody>
           </table>
 
-          <Separator className="my-8 h-0.5 bg-gray-300" />
+          <hr className="my-8 border-t-2 border-gray-300 print:border-gray-400" />
 
           <table className="w-full">
             <thead>
@@ -105,7 +105,9 @@ export const CartOrderConfirmation = ({
             <tbody>
               {items.map((item) => (
                 <tr key={item.product.id}>
-                  <td className="py-2">{item.product.name}</td>
+                  <td className="py-2">
+                    {item.product.name} <span className="text-gray-500">({item.product.code})</span>
+                  </td>
                   <td className="py-2 text-right flex items-center justify-end gap-2">
                     {item.quantity} unitats 
                     <Square className="h-5 w-5 text-gray-400" />

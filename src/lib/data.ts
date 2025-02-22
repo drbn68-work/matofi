@@ -4,6 +4,7 @@ import { Product } from "./types";
 export const products: Product[] = [
   {
     id: "1",
+    code: "GL-100",
     name: "Guants de Làtex",
     description: "Caixa de 100 guants d'examinació de làtex",
     category: "Seguretat",
@@ -13,6 +14,7 @@ export const products: Product[] = [
   },
   {
     id: "2",
+    code: "PP-500",
     name: "Paper d'Impressora",
     description: "500 fulls de paper d'alta qualitat",
     category: "Paper",
@@ -22,6 +24,7 @@ export const products: Product[] = [
   },
   {
     id: "3",
+    code: "BP-012",
     name: "Bolígrafs",
     description: "Paquet de 12 bolígrafs blaus",
     category: "Escriptura",
@@ -31,6 +34,7 @@ export const products: Product[] = [
   },
   {
     id: "4",
+    code: "MQ-050",
     name: "Mascaretes Quirúrgiques",
     description: "Caixa de 50 mascaretes quirúrgiques d'un sol ús",
     category: "Seguretat",
@@ -40,6 +44,7 @@ export const products: Product[] = [
   },
   {
     id: "5",
+    code: "GH-500",
     name: "Gel Hidroalcohòlic",
     description: "500ml de gel hidroalcohòlic de grau mèdic",
     category: "Seguretat",
@@ -49,6 +54,7 @@ export const products: Product[] = [
   },
   {
     id: "6",
+    code: "NA-012",
     name: "Notes Adhesives",
     description: "Paquet de 12 blocs de notes adhesives",
     category: "Paper",
@@ -58,6 +64,7 @@ export const products: Product[] = [
   },
   {
     id: "7",
+    code: "PC-500",
     name: "Paper de Còpia Premium",
     description: "Paper de còpia d'alta qualitat per a impressió professional",
     category: "Paper",
@@ -67,6 +74,7 @@ export const products: Product[] = [
   },
   {
     id: "8",
+    code: "PF-020",
     name: "Pantalles Facials",
     description: "Paquet de 20 pantalles facials de grau mèdic",
     category: "Seguretat",
@@ -76,6 +84,7 @@ export const products: Product[] = [
   },
   {
     id: "9",
+    code: "RG-024",
     name: "Retoladors de Gel",
     description: "Conjunt de 24 retoladors de gel de colors",
     category: "Escriptura",
@@ -85,6 +94,7 @@ export const products: Product[] = [
   },
   {
     id: "10",
+    code: "BS-010",
     name: "Bates d'un Sol Ús",
     description: "Paquet de 10 bates mèdiques d'un sol ús",
     category: "Seguretat",
@@ -94,6 +104,7 @@ export const products: Product[] = [
   },
   {
     id: "11",
+    code: "GP-001",
     name: "Grapadora",
     description: "Grapadora professional amb 1000 grapes",
     category: "Oficina",
@@ -103,6 +114,7 @@ export const products: Product[] = [
   },
   {
     id: "12",
+    code: "CA-100",
     name: "Carpetes",
     description: "Paquet de 100 carpetes mida carta",
     category: "Paper",
