@@ -106,7 +106,7 @@ export const CartOrderConfirmation = ({
               {items.map((item) => (
                 <tr key={item.product.id}>
                   <td className="py-2">
-                    {item.product.name} <span className="text-gray-500">({item.product.code})</span>
+                    <span className="text-gray-600">{item.product.code}</span> - {item.product.name}
                   </td>
                   <td className="py-2 text-right flex items-center justify-end gap-2">
                     {item.quantity} unitats 
