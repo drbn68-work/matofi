@@ -35,3 +35,9 @@ export interface LoginCredentials {
   password: string;
   costCenter: string;
 }
+
+export interface LoginResponse {
+  success: boolean;
+  user?: User;
+  error?: string;
+}

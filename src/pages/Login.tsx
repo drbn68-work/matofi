@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { LoginCredentials, User } from "@/lib/types";
+import { LoginCredentials } from "@/lib/types";
+import { loginWithLDAP } from "@/lib/api";
 
 export const Login = () => {
   const [credentials, setCredentials] = useState<LoginCredentials>({
@@ -12,31 +13,41 @@ export const Login = () => {
     password: "",
     costCenter: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Login attempt with:", credentials);
+    setIsLoading(true);
 
-    const mockUser: User = {
-      username: credentials.username,
-      fullName: credentials.username === "drobson" ? "David Robson" : credentials.username,
-      costCenter: credentials.costCenter,
-      department: "Servei d'Informàtica",
-    };
+    try {
+      const response = await loginWithLDAP(credentials);
+      
+      if (response.success && response.user) {
+        // Store user info in localStorage
+        localStorage.setItem("user", JSON.stringify(response.user));
+        
+        toast({
+          title: "Benvingut/da",
+          description: `Has iniciat sessió com a ${response.user.fullName}`,
+        });
 
-    // Store user info in localStorage
-    localStorage.setItem("user", JSON.stringify(mockUser));
-    console.log("User stored in localStorage:", mockUser);
-    
-    toast({
-      title: "Benvingut/da",
-      description: `Has iniciat sessió com a ${mockUser.fullName}`,
-    });
-
-    // Force reload to trigger route protection
-    window.location.href = "/";
+        // Navigate to home page
+        window.location.href = "/";
+      } else {
+        throw new Error(response.error || 'Error en la autenticación');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      toast({
+        title: "Error d'autenticació",
+        description: error instanceof Error ? error.message : "Hi ha hagut un error durant l'inici de sessió",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -67,6 +78,7 @@ export const Login = () => {
                 value={credentials.username}
                 onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
                 className="mt-1"
+                disabled={isLoading}
               />
             </div>
 
@@ -82,6 +94,7 @@ export const Login = () => {
                 value={credentials.password}
                 onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
                 className="mt-1"
+                disabled={isLoading}
               />
             </div>
 
@@ -97,12 +110,13 @@ export const Login = () => {
                 value={credentials.costCenter}
                 onChange={(e) => setCredentials(prev => ({ ...prev, costCenter: e.target.value }))}
                 className="mt-1"
+                disabled={isLoading}
               />
             </div>
           </div>
 
-          <Button type="submit" className="w-full">
-            Iniciar Sessió
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Autenticant..." : "Iniciar Sessió"}
           </Button>
         </form>
       </div>
