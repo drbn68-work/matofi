@@ -18,24 +18,34 @@ export const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // TODO: Implement LDAP authentication
-    // For now, we'll simulate a successful login
-    const mockUser: User = {
-      username: credentials.username,
-      fullName: credentials.username === "drobson" ? "David Robson" : credentials.username,
-      costCenter: credentials.costCenter,
-      department: "Servei d'Informàtica",
-    };
+    try {
+      // TODO: Implement LDAP authentication
+      // For now, we'll simulate a successful login
+      const mockUser: User = {
+        username: credentials.username,
+        fullName: credentials.username === "drobson" ? "David Robson" : credentials.username,
+        costCenter: credentials.costCenter,
+        department: "Servei d'Informàtica",
+      };
 
-    // Store user info in localStorage
-    localStorage.setItem("user", JSON.stringify(mockUser));
-    
-    toast({
-      title: "Benvingut/da",
-      description: `Has iniciat sessió com a ${mockUser.fullName}`,
-    });
+      // Store user info in localStorage
+      localStorage.setItem("user", JSON.stringify(mockUser));
+      
+      toast({
+        title: "Benvingut/da",
+        description: `Has iniciat sessió com a ${mockUser.fullName}`,
+      });
 
-    navigate("/");
+      // Use navigate with replace to prevent going back to login
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error('Error during login:', error);
+      toast({
+        title: "Error",
+        description: "Hi ha hagut un error durant l'inici de sessió",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
