@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { CartPreview } from "@/components/CartPreview";
-import { getProducts, getCategories } from "@/lib/data";
+import { getProducts, getCategories } from "@/lib/api";
 import { CartItem, Product, User } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -27,22 +27,25 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const loadProducts = async () => {
+    const loadData = async () => {
       try {
-        const loadedProducts = await getProducts();
+        const [loadedProducts, loadedCategories] = await Promise.all([
+          getProducts(),
+          getCategories()
+        ]);
         setProducts(loadedProducts);
-        setCategories(getCategories(loadedProducts));
+        setCategories(loadedCategories);
       } catch (error) {
-        console.error('Error loading products:', error);
+        console.error('Error loading data:', error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "No s'han pogut carregar els productes",
+          description: "No s'han pogut carregar les dades",
         });
       }
     };
 
-    loadProducts();
+    loadData();
   }, []);
 
   useEffect(() => {
