@@ -1,14 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { CartPreview } from "@/components/CartPreview";
 import { products, categories } from "@/lib/data";
-import { CartItem, Product } from "@/lib/types";
+import { CartItem, Product, User } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Toggle } from "@/components/ui/toggle";
-import { LayoutGrid, LayoutList } from "lucide-react";
+import { LayoutGrid, LayoutList, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const ITEMS_PER_PAGE = 8;
 
@@ -18,7 +20,21 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [isGridView, setIsGridView] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    navigate("/login");
+  };
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name
@@ -77,6 +93,16 @@ const Index = () => {
             Material d'Oficina
           </h1>
           <div className="flex items-center gap-4">
+            {user && (
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">
+                  {user.fullName}
+                </span>
+                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
             <SearchBar value={search} onChange={setSearch} />
             <CartPreview
               items={cartItems}
