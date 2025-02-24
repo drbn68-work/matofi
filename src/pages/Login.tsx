@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,45 +15,28 @@ export const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check if user is already logged in
-    const user = localStorage.getItem("user");
-    if (user) {
-      navigate("/", { replace: true });
-    }
-  }, [navigate]);
-
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Login attempt with:", credentials);
 
-    try {
-      // TODO: Implement LDAP authentication
-      // For now, we'll simulate a successful login
-      const mockUser: User = {
-        username: credentials.username,
-        fullName: credentials.username === "drobson" ? "David Robson" : credentials.username,
-        costCenter: credentials.costCenter,
-        department: "Servei d'Informàtica",
-      };
+    const mockUser: User = {
+      username: credentials.username,
+      fullName: credentials.username === "drobson" ? "David Robson" : credentials.username,
+      costCenter: credentials.costCenter,
+      department: "Servei d'Informàtica",
+    };
 
-      // Store user info in localStorage
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      
-      toast({
-        title: "Benvingut/da",
-        description: `Has iniciat sessió com a ${mockUser.fullName}`,
-      });
+    // Store user info in localStorage
+    localStorage.setItem("user", JSON.stringify(mockUser));
+    console.log("User stored in localStorage:", mockUser);
+    
+    toast({
+      title: "Benvingut/da",
+      description: `Has iniciat sessió com a ${mockUser.fullName}`,
+    });
 
-      // Use navigate with replace to prevent going back to login
-      navigate("/", { replace: true });
-    } catch (error) {
-      console.error('Error during login:', error);
-      toast({
-        title: "Error",
-        description: "Hi ha hagut un error durant l'inici de sessió",
-        variant: "destructive",
-      });
-    }
+    // Force reload to trigger route protection
+    window.location.href = "/";
   };
 
   return (
