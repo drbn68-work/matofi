@@ -1,4 +1,6 @@
 
+import { LoginCredentials, LoginResponse } from '@/lib/types';
+
 const API_BASE_URL = 'http://localhost:3000/api'; // Ajusta esto a la URL de tu backend
 
 export const loginWithLDAP = async (credentials: LoginCredentials): Promise<LoginResponse> => {
