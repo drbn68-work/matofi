@@ -38,3 +38,28 @@ export interface LoginResponse {
   user?: User;
   error?: string;
 }
+
+export interface CartOrderConfirmationProps {
+  items: CartItem[];
+  userInfo: UserInfo;
+  deliveryLocation: string;
+  comments: string;
+}
+
+export interface CartReviewFormProps {
+  items: CartItem[];
+  userInfo: UserInfo;
+  deliveryLocation: string;
+  comments: string;
+  onRemove: (productId: string) => void;
+  onSubmit: () => void;
+  onDeliveryLocationChange: (value: string) => void;
+  onCommentsChange: (value: string) => void;
+}
+
+export interface UserInfo {
+  fullName: string;
+  department: string;
+  costCenter: string;
+  email: string;
+}
