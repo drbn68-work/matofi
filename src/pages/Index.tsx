@@ -58,6 +58,8 @@ const Index = () => {
   };
 
   const filteredProducts = products.filter((product) => {
+    if (!product?.descripcion) return false;
+    
     const matchesSearch = product.descripcion
       .toLowerCase()
       .includes(search.toLowerCase());
