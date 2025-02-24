@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchBar } from "@/components/SearchBar";
@@ -33,7 +32,7 @@ const Index = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
-    navigate("/login");
+    window.location.href = "/login";
   };
 
   const filteredProducts = products.filter((product) => {
