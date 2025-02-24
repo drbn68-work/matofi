@@ -1,13 +1,10 @@
 
 export interface Product {
   id: string;
-  code: string;
-  name: string;
-  description: string;
-  category: string;
-  image: string;
-  price: number;
-  stock: number;
+  codsap: string;
+  codas400: string;
+  descripcion: string;
+  ubicacion: string;
 }
 
 export interface CartItem {
