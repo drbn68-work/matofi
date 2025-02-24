@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchBar } from "@/components/SearchBar";
@@ -36,10 +37,10 @@ const Index = () => {
   };
 
   const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
+    const matchesSearch = product.descripcion
       .toLowerCase()
       .includes(search.toLowerCase());
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
+    const matchesCategory = !selectedCategory || product.ubicacion === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -63,7 +64,7 @@ const Index = () => {
     });
     toast({
       title: "Material afegit",
-      description: `${quantity} x ${product.name}`,
+      description: `${quantity} x ${product.descripcion}`,
     });
   };
 
