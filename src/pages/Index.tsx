@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { SearchBar } from "@/components/SearchBar";
 import { ProductCard } from "@/components/ProductCard";
 import { CartPreview } from "@/components/CartPreview";
-import { products, categories } from "@/lib/data";
+import { getProducts, getCategories } from "@/lib/data";
 import { CartItem, Product, User } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -21,8 +21,29 @@ const Index = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isGridView, setIsGridView] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const loadedProducts = await getProducts();
+        setProducts(loadedProducts);
+        setCategories(getCategories(loadedProducts));
+      } catch (error) {
+        console.error('Error loading products:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No s'han pogut carregar els productes",
+        });
+      }
+    };
+
+    loadProducts();
+  }, []);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
