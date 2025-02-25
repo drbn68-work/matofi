@@ -68,7 +68,7 @@ export const Login = () => {
             className="mx-auto h-16"
           />
           <h2 className="mt-6 text-2xl font-bold text-gray-900">
-            Gestió de Material d'Oficina
+            Sol·licitud de Material d'Oficina
           </h2>
         </div>
 
