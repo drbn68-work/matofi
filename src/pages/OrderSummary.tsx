@@ -26,7 +26,6 @@ const OrderSummary = () => {
   const state = location.state as OrderSummaryPageState;
 
   useEffect(() => {
-    // Solo navegamos al inicio si no hay estado en absoluto
     if (!location.state) {
       navigate("/");
       return;
@@ -34,7 +33,6 @@ const OrderSummary = () => {
 
     const sendEmail = async () => {
       try {
-        // Aquí iría la llamada real a tu API de backend
         await axios.post("/api/send-order-email", {
           items: state.items,
           userInfo: state.userInfo,
@@ -58,7 +56,6 @@ const OrderSummary = () => {
     sendEmail();
   }, [location.state, navigate, toast]);
 
-  // Si no hay estado, no renderizamos nada mientras se realiza la navegación
   if (!state) return null;
 
   const handlePrint = () => {
@@ -66,8 +63,17 @@ const OrderSummary = () => {
   };
 
   const handleLogout = () => {
+    // Eliminar datos del usuario del localStorage
     localStorage.removeItem("user");
-    navigate("/login");
+    
+    // Mostrar mensaje de despedida
+    toast({
+      title: "Sessió tancada",
+      description: "Has tancat la sessió correctament",
+    });
+
+    // Redirigir a la página de login
+    navigate("/login", { replace: true });
   };
 
   return (
