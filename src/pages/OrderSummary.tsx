@@ -26,7 +26,8 @@ const OrderSummary = () => {
   const state = location.state as OrderSummaryPageState;
 
   useEffect(() => {
-    if (!state) {
+    // Solo navegamos al inicio si no hay estado en absoluto
+    if (!location.state) {
       navigate("/");
       return;
     }
@@ -55,7 +56,10 @@ const OrderSummary = () => {
     };
 
     sendEmail();
-  }, [state, navigate, toast]);
+  }, [location.state, navigate, toast]);
+
+  // Si no hay estado, no renderizamos nada mientras se realiza la navegación
+  if (!state) return null;
 
   const handlePrint = () => {
     window.print();
@@ -65,8 +69,6 @@ const OrderSummary = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
-
-  if (!state) return null;
 
   return (
     <div className="min-h-screen bg-white">
