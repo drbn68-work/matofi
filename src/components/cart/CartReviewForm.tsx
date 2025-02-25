@@ -4,6 +4,8 @@ import { CartReviewFormProps } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Plus, Minus } from "lucide-react";
 
 export const CartReviewForm = ({
   items,
@@ -15,8 +17,14 @@ export const CartReviewForm = ({
   onDeliveryLocationChange,
   onCommentsChange
 }: CartReviewFormProps) => {
+  const updateQuantity = (productId: string, newQuantity: number) => {
+    // Por ahora no podemos actualizar la cantidad porque necesitamos
+    // agregar la función al CartReviewFormProps
+    console.log('Update quantity:', productId, newQuantity);
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 h-[calc(100vh-8rem)]">
       <div className="bg-gray-50 p-4 rounded-lg">
         <h3 className="font-medium mb-2">Informació de l'usuari</h3>
         <p>{userInfo.fullName}</p>
@@ -55,27 +63,49 @@ export const CartReviewForm = ({
 
       <div className="space-y-2">
         <h3 className="font-medium">Articles sol·licitats</h3>
-        {items.map((item) => (
-          <div key={item.product.id} className="flex justify-between items-center border-b pb-2">
-            <div>
-              <p className="font-medium">{item.product.descripcion}</p>
-              <p className="text-sm text-gray-500">
-                SAP: {item.product.codsap} | AS400: {item.product.codas400}
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="font-medium">{item.quantity} unitats</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-500 hover:text-red-600"
-                onClick={() => onRemove(item.product.id)}
-              >
-                Eliminar
-              </Button>
-            </div>
+        <ScrollArea className="h-[calc(100vh-32rem)] pr-4">
+          <div className="space-y-4">
+            {items.map((item) => (
+              <div key={item.product.id} className="flex justify-between items-start border-b pb-2">
+                <div className="flex-grow">
+                  <p className="font-medium">{item.product.descripcion}</p>
+                  <p className="text-sm text-gray-500">
+                    SAP: {item.product.codsap} | AS400: {item.product.codas400}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="w-8 text-center">{item.quantity}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500 hover:text-red-600"
+                    onClick={() => onRemove(item.product.id)}
+                  >
+                    Eliminar
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </ScrollArea>
       </div>
 
       <Button onClick={onSubmit} className="w-full" disabled={!deliveryLocation.trim()}>

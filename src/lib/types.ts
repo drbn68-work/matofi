@@ -55,6 +55,7 @@ export interface CartReviewFormProps {
   onSubmit: () => void;
   onDeliveryLocationChange: (value: string) => void;
   onCommentsChange: (value: string) => void;
+  onUpdateQuantity?: (productId: string, quantity: number) => void;
 }
 
 export interface UserInfo {
