@@ -15,18 +15,33 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
+  // Verificar si el usuario está autenticado
+  const user = localStorage.getItem("user");
+
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route
-          path="/"
+        {/* Redirigir la ruta raíz a /login si no está autenticado, o a / si lo está */}
+        <Route 
+          path="/" 
           element={
-            <PrivateRoute>
-              <Index />
-            </PrivateRoute>
+            user ? (
+              <PrivateRoute>
+                <Index />
+              </PrivateRoute>
+            ) : (
+              <Navigate to="/login" replace />
+            )
           }
         />
+
+        {/* La ruta de login es pública pero redirige a / si ya está autenticado */}
+        <Route 
+          path="/login" 
+          element={user ? <Navigate to="/" replace /> : <Login />} 
+        />
+
+        {/* Rutas protegidas */}
         <Route
           path="/order-summary"
           element={
@@ -35,6 +50,8 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        {/* Ruta 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
