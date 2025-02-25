@@ -71,10 +71,10 @@ const OrderSummary = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white print-area">
       <div className="container max-w-4xl mx-auto py-8">
-        <div ref={printRef} className="space-y-8 print:p-8">
-          <div className="flex items-center justify-between print:border-b print:pb-4">
+        <div ref={printRef} className="space-y-8">
+          <div className="flex items-center justify-between border-b pb-4">
             <img
               src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png"
               alt="Fundació Puigvert"
@@ -123,7 +123,7 @@ const OrderSummary = () => {
           </div>
         </div>
 
-        <div className="flex justify-between mt-8 print:hidden">
+        <div className="flex justify-between mt-8 no-print">
           <Button onClick={handlePrint} className="gap-2">
             <Printer className="h-4 w-4" />
             Imprimir
