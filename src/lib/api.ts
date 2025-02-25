@@ -80,33 +80,23 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
 };
 
 export const getProducts = async (): Promise<Product[]> => {
-  // En desarrollo, retornar datos mock
-  if (process.env.NODE_ENV === 'development') {
-    return Promise.resolve(mockProducts);
-  }
-
-  // En producción, usar el backend real
   try {
     const response = await api.get('/products');
     return response.data;
   } catch (error) {
-    console.error('Error fetching products:', error);
-    throw error;
+    console.error('Error loading data:', error);
+    // Si hay un error, retornamos los datos mock
+    return mockProducts;
   }
 };
 
 export const getCategories = async (): Promise<string[]> => {
-  // En desarrollo, retornar categorías mock
-  if (process.env.NODE_ENV === 'development') {
-    return Promise.resolve(mockCategories);
-  }
-
-  // En producción, usar el backend real
   try {
     const response = await api.get('/categories');
     return response.data;
   } catch (error) {
     console.error('Error fetching categories:', error);
-    throw error;
+    // Si hay un error, retornamos las categorías mock
+    return mockCategories;
   }
 };
