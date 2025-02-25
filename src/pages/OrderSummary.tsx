@@ -64,7 +64,7 @@ const OrderSummary = () => {
 
   const handleLogout = () => {
     // Eliminar datos del usuario del localStorage
-    localStorage.removeItem("user");
+    localStorage.clear(); // Limpiamos todo el localStorage
     
     // Mostrar mensaje de despedida
     toast({
@@ -72,8 +72,10 @@ const OrderSummary = () => {
       description: "Has tancat la sessió correctament",
     });
 
-    // Redirigir a la página de login
-    navigate("/login", { replace: true });
+    // Forzar una recarga completa de la aplicación después de un breve retraso
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 100);
   };
 
   return (
