@@ -13,6 +13,7 @@ import { CartCounter } from "./cart/CartCounter";
 import { CartOrderConfirmation } from "./cart/CartOrderConfirmation";
 import { CartReviewForm } from "./cart/CartReviewForm";
 import { UserInfo } from "./cart/types";
+import { useNavigate } from "react-router-dom";
 
 interface CartPreviewProps {
   items: CartItem[];
@@ -27,6 +28,7 @@ export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: C
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedItems, setSubmittedItems] = useState<CartItem[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const totalItems = isSubmitted 
     ? submittedItems.reduce((acc, item) => acc + item.quantity, 0)
@@ -53,9 +55,14 @@ export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: C
     setIsSubmitted(true);
     onCheckout();
     
-    toast({
-      title: "Èxit",
-      description: "Comanda realitzada correctament",
+    // Navegar a la página de resumen con los datos necesarios
+    navigate("/order-summary", {
+      state: {
+        items,
+        userInfo,
+        deliveryLocation,
+        comments
+      }
     });
   };
 
