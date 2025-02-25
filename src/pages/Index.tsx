@@ -54,6 +54,11 @@ const Index = () => {
     }
   }, []);
 
+  // Añadir efecto para resetear la página cuando cambia la búsqueda o categoría
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedCategory]);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     window.location.href = "/login";
