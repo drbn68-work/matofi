@@ -19,79 +19,79 @@ export const CartReviewForm = ({
   onUpdateQuantity
 }: CartReviewFormProps) => {
   return (
-    <div className="space-y-4 h-[calc(100vh-8rem)]">
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <h3 className="font-medium mb-2">Informació de l'usuari</h3>
-        <p>{userInfo.fullName}</p>
-        <p className="text-sm text-gray-500">{userInfo.department}</p>
-        <p className="text-sm text-gray-500">Centre de cost: {userInfo.costCenter}</p>
-        <p className="text-sm text-gray-500">{userInfo.email}</p>
-      </div>
+    <div className="flex h-[calc(100vh-8rem)] flex-col">
+      <div className="flex-1 space-y-4 overflow-y-auto px-1">
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h3 className="font-medium mb-2">Informació de l'usuari</h3>
+          <p>{userInfo.fullName}</p>
+          <p className="text-sm text-gray-500">{userInfo.department}</p>
+          <p className="text-sm text-gray-500">Centre de cost: {userInfo.costCenter}</p>
+          <p className="text-sm text-gray-500">{userInfo.email}</p>
+        </div>
 
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <label htmlFor="deliveryLocation" className="text-sm font-medium">
-            Lloc de lliurament *
-          </label>
-          <Input
-            id="deliveryLocation"
-            value={deliveryLocation}
-            onChange={(e) => onDeliveryLocationChange(e.target.value)}
-            placeholder="Indica on vols rebre el material"
-            required
-          />
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label htmlFor="deliveryLocation" className="text-sm font-medium">
+              Lloc de lliurament *
+            </label>
+            <Input
+              id="deliveryLocation"
+              value={deliveryLocation}
+              onChange={(e) => onDeliveryLocationChange(e.target.value)}
+              placeholder="Indica on vols rebre el material"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="comments" className="text-sm font-medium">
+              Comentaris
+            </label>
+            <Textarea
+              id="comments"
+              value={comments}
+              onChange={(e) => onCommentsChange(e.target.value)}
+              placeholder="Afegeix comentaris addicionals si ho necessites"
+              className="min-h-[100px]"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="comments" className="text-sm font-medium">
-            Comentaris
-          </label>
-          <Textarea
-            id="comments"
-            value={comments}
-            onChange={(e) => onCommentsChange(e.target.value)}
-            placeholder="Afegeix comentaris addicionals si ho necessites"
-            className="min-h-[100px]"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <h3 className="font-medium">Articles sol·licitats</h3>
-        <ScrollArea className="h-[calc(100vh-32rem)] pr-4">
-          <div className="space-y-4">
+          <h3 className="font-medium">Articles sol·licitats</h3>
+          <div className="space-y-2">
             {items.map((item) => (
-              <div key={item.product.id} className="flex justify-between items-start border-b pb-2">
-                <div className="flex-grow">
-                  <p className="font-medium">{item.product.descripcion}</p>
-                  <p className="text-sm text-gray-500">
+              <div key={item.product.id} className="flex items-center justify-between py-2 border-b">
+                <div className="flex-1 min-w-0 pr-4">
+                  <p className="font-medium truncate">{item.product.descripcion}</p>
+                  <p className="text-xs text-gray-500">
                     SAP: {item.product.codsap} | AS400: {item.product.codas400}
                   </p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
+                <div className="flex flex-col items-end gap-1">
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-6 w-6"
                       onClick={() => onUpdateQuantity?.(item.product.id, item.quantity - 1)}
                     >
-                      <Minus className="h-4 w-4" />
+                      <Minus className="h-3 w-3" />
                     </Button>
-                    <span className="w-8 text-center">{item.quantity}</span>
+                    <span className="w-8 text-center text-sm">{item.quantity}</span>
                     <Button
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8"
+                      className="h-6 w-6"
                       onClick={() => onUpdateQuantity?.(item.product.id, item.quantity + 1)}
                     >
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-3 w-3" />
                     </Button>
                   </div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-500 hover:text-red-600"
+                    className="text-red-500 hover:text-red-600 h-6 text-xs px-2"
                     onClick={() => onRemove(item.product.id)}
                   >
                     Eliminar
@@ -100,12 +100,14 @@ export const CartReviewForm = ({
               </div>
             ))}
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
-      <Button onClick={onSubmit} className="w-full" disabled={!deliveryLocation.trim()}>
-        Confirmar sol·licitud
-      </Button>
+      <div className="mt-4 border-t pt-4 bg-white">
+        <Button onClick={onSubmit} className="w-full" disabled={!deliveryLocation.trim()}>
+          Confirmar sol·licitud
+        </Button>
+      </div>
     </div>
   );
 };
