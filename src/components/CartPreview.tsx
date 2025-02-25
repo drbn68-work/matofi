@@ -18,9 +18,10 @@ interface CartPreviewProps {
   items: CartItem[];
   onRemove: (productId: string) => void;
   onCheckout: () => void;
+  onUpdateQuantity: (productId: string, quantity: number) => void;
 }
 
-export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) => {
+export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: CartPreviewProps) => {
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [comments, setComments] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -85,6 +86,7 @@ export const CartPreview = ({ items, onRemove, onCheckout }: CartPreviewProps) =
             onSubmit={handleSubmit}
             onDeliveryLocationChange={setDeliveryLocation}
             onCommentsChange={setComments}
+            onUpdateQuantity={onUpdateQuantity}
           />
         )}
       </SheetContent>

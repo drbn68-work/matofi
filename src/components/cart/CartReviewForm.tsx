@@ -15,14 +15,9 @@ export const CartReviewForm = ({
   onRemove,
   onSubmit,
   onDeliveryLocationChange,
-  onCommentsChange
+  onCommentsChange,
+  onUpdateQuantity
 }: CartReviewFormProps) => {
-  const updateQuantity = (productId: string, newQuantity: number) => {
-    // Por ahora no podemos actualizar la cantidad porque necesitamos
-    // agregar la función al CartReviewFormProps
-    console.log('Update quantity:', productId, newQuantity);
-  };
-
   return (
     <div className="space-y-4 h-[calc(100vh-8rem)]">
       <div className="bg-gray-50 p-4 rounded-lg">
@@ -79,7 +74,7 @@ export const CartReviewForm = ({
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                      onClick={() => onUpdateQuantity?.(item.product.id, item.quantity - 1)}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
@@ -88,7 +83,7 @@ export const CartReviewForm = ({
                       variant="outline"
                       size="icon"
                       className="h-8 w-8"
-                      onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                      onClick={() => onUpdateQuantity?.(item.product.id, item.quantity + 1)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>

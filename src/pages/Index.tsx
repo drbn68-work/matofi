@@ -94,6 +94,21 @@ const Index = () => {
     });
   };
 
+  const handleUpdateCartQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      handleRemoveFromCart(productId);
+      return;
+    }
+    
+    setCartItems((prev) => 
+      prev.map((item) =>
+        item.product.id === productId
+          ? { ...item, quantity: newQuantity }
+          : item
+      )
+    );
+  };
+
   const handleRemoveFromCart = (productId: string) => {
     setCartItems((prev) => prev.filter((item) => item.product.id !== productId));
   };
@@ -134,6 +149,7 @@ const Index = () => {
               items={cartItems}
               onRemove={handleRemoveFromCart}
               onCheckout={handleCheckout}
+              onUpdateQuantity={handleUpdateCartQuantity}
             />
           </div>
         </div>
