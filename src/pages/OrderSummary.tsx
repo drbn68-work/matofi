@@ -102,8 +102,7 @@ const OrderSummary = () => {
               <h2 className="text-lg font-semibold mb-4">Articles Sol·licitats</h2>
               <div className="divide-y">
                 {state.items.map((item) => (
-                  <div key={item.product.id} className="py-4 flex items-start gap-4">
-                    <div className="w-6 h-6 border rounded print:border-2" />
+                  <div key={item.product.id} className="py-4 flex items-start justify-between">
                     <div className="flex-1">
                       <p className="font-medium">{item.product.descripcion}</p>
                       <p className="text-sm text-gray-500">
@@ -113,7 +112,10 @@ const OrderSummary = () => {
                         Ubicación: {item.product.ubicacion}
                       </p>
                     </div>
-                    <p className="font-medium">{item.quantity} unitats</p>
+                    <div className="flex items-center gap-4">
+                      <span className="font-medium whitespace-nowrap">{item.quantity} unitats</span>
+                      <div className="w-6 h-6 border rounded-sm print:border-2 flex-shrink-0" />
+                    </div>
                   </div>
                 ))}
               </div>
