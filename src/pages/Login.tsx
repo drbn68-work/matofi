@@ -1,57 +1,79 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { LoginCredentials } from "@/lib/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { loginWithLDAP } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
-export const Login = () => {
-  const [credentials, setCredentials] = useState<LoginCredentials>({
-    username: "",
-    password: "",
-    costCenter: "",
-  });
+const formSchema = z.object({
+  username: z.string().min(1, "Nombre de usuario requerido"),
+  password: z.string().min(1, "Contraseña requerida"),
+  costCenter: z.string().min(1, "Centro de coste requerido"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    // Redirigir si el usuario ya está autenticado
-    const user = localStorage.getItem("user");
-    if (user) {
-      navigate("/");
-    }
-  }, [navigate]);
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      costCenter: "",
+    },
+  });
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
-
     try {
-      const response = await loginWithLDAP(credentials);
+      const response = await loginWithLDAP(data);
       
       if (response.success && response.user) {
-        // Store user info in localStorage
         localStorage.setItem("user", JSON.stringify(response.user));
         
         toast({
-          title: "Benvingut/da",
-          description: `Has iniciat sessió com a ${response.user.fullName}`,
+          title: "Inicio de sesión exitoso",
+          description: `Bienvenido, ${response.user.fullName}`,
         });
-
-        // Navigate to home page
-        window.location.href = "/";
+        
+        navigate("/");
       } else {
-        throw new Error(response.error || 'Error en la autenticación');
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: response.error || "Error de autenticación",
+        });
       }
     } catch (error) {
-      console.error('Error during login:', error);
+      console.error("Error de inicio de sesión:", error);
       toast({
-        title: "Error d'autenticació",
-        description: error instanceof Error ? error.message : "Hi ha hagut un error durant l'inici de sessió",
         variant: "destructive",
+        title: "Error",
+        description: "Error al conectar con el servidor",
       });
     } finally {
       setIsLoading(false);
@@ -59,75 +81,77 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md space-y-8 p-8">
-        <div className="text-center">
-          <img 
-            src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png" 
-            alt="Fundació Puigvert" 
-            className="mx-auto h-16"
-          />
-          <h2 className="mt-6 text-2xl font-bold text-gray-900">
-            Sol·licitud de Material d'Oficina
-          </h2>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          <div className="space-y-4 rounded-md shadow-sm">
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                Usuari
-              </label>
-              <Input
-                id="username"
+    <div className="flex h-screen items-center justify-center bg-gray-50">
+      <Card className="w-[350px]">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Material d'Oficina</CardTitle>
+          <CardDescription>
+            Accede con tus credenciales LDAP
+          </CardDescription>
+        </CardHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
                 name="username"
-                type="text"
-                required
-                value={credentials.username}
-                onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
-                className="mt-1"
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nombre de usuario</FormLabel>
+                    <FormControl>
+                      <Input placeholder="usuario" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Contrasenya
-              </label>
-              <Input
-                id="password"
+              <FormField
+                control={form.control}
                 name="password"
-                type="password"
-                required
-                value={credentials.password}
-                onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-                className="mt-1"
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Contraseña</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-
-            <div>
-              <label htmlFor="costCenter" className="block text-sm font-medium text-gray-700">
-                Centre de Cost
-              </label>
-              <Input
-                id="costCenter"
+              <FormField
+                control={form.control}
                 name="costCenter"
-                type="text"
-                required
-                value={credentials.costCenter}
-                onChange={(e) => setCredentials(prev => ({ ...prev, costCenter: e.target.value }))}
-                className="mt-1"
-                disabled={isLoading}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Centro de coste</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Centro de coste" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
+            </CardContent>
+            <CardFooter>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? "Autenticando..." : "Iniciar sesión"}
+              </Button>
+            </CardFooter>
+          </form>
+        </Form>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Autenticant..." : "Iniciar Sessió"}
-          </Button>
-        </form>
-      </div>
+        <CardFooter className="flex flex-col items-center pt-0">
+          <div className="text-xs text-gray-500 mt-4">
+            Nota: Si el LDAP no está disponible, puedes usar:<br />
+            Usuario: testuser<br />
+            Contraseña: testuser
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

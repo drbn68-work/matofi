@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { LoginCredentials, LoginResponse, Product } from '@/lib/types';
 
@@ -67,16 +68,32 @@ const mockProducts: Product[] = [
 const mockCategories = [...new Set(mockProducts.map(p => p.ubicacion))];
 
 export const loginWithLDAP = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-  // Mock login para desarrollo
-  return Promise.resolve({
-    success: true,
-    user: {
-      username: credentials.username,
-      fullName: `Usuario de Prueba (${credentials.username})`,
-      costCenter: credentials.costCenter,
-      department: 'Departamento de Prueba'
+  try {
+    // Intentar la autenticación LDAP a través de la API
+    const response = await api.post('/auth/login', credentials);
+    return response.data;
+  } catch (error) {
+    console.error('Error en autenticación LDAP:', error);
+    
+    // Si el servicio LDAP no está disponible o falla, intentar con las credenciales de prueba
+    if (credentials.username === 'testuser' && credentials.password === 'testuser') {
+      return {
+        success: true,
+        user: {
+          username: credentials.username,
+          fullName: `Usuario de Prueba (${credentials.username})`,
+          costCenter: credentials.costCenter,
+          department: 'Departamento de Prueba'
+        }
+      };
     }
-  });
+    
+    // Si no son las credenciales de prueba, rechazar la autenticación
+    return {
+      success: false,
+      error: 'Credenciales inválidas o servicio LDAP no disponible'
+    };
+  }
 };
 
 export const getProducts = async (): Promise<Product[]> => {
