@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LoginCredentials } from "@/lib/types";
 
 const formSchema = z.object({
   username: z.string().min(1, "Nom d'usuari requerit"),
@@ -116,7 +117,7 @@ const Login = () => {
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
             <img 
-              src="/lovable-uploads/167dfe77-7dcb-491e-965c-7a888b9ad928.png" 
+              src="/lovable-uploads/8f0fb3de-7ace-4eb3-8769-ce306cdafe27.png" 
               alt="Fundació Puigvert" 
               className="h-16"
             />

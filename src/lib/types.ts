@@ -32,12 +32,29 @@ export interface LoginResponse {
   error?: string;
 }
 
+export interface UserInfo {
+  name: string;
+  department: string;
+  costCenter: string;
+}
+
 export interface CartReviewFormProps {
+  items: CartItem[];
+  userInfo: UserInfo;
+  deliveryLocation: string;
+  comments: string;
+  onRemove: (productId: string) => void;
   onSubmit: () => void;
-  onCancel: () => void;
+  onDeliveryLocationChange: React.Dispatch<React.SetStateAction<string>>;
+  onCommentsChange: React.Dispatch<React.SetStateAction<string>>;
+  onUpdateQuantity: (productId: string, quantity: number) => void;
 }
 
 export interface CartOrderConfirmationProps {
   onClose: () => void;
   orderNumber: string;
+  items: CartItem[];
+  userInfo: UserInfo;
+  deliveryLocation: string;
+  comments: string;
 }
