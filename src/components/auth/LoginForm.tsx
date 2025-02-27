@@ -65,6 +65,8 @@ const LoginForm = () => {
       
       if (response.success && response.user) {
         console.log("Autenticación exitosa:", response.user);
+        
+        // Guardamos la información del usuario en localStorage
         localStorage.setItem("user", JSON.stringify(response.user));
         
         toast({
@@ -72,7 +74,12 @@ const LoginForm = () => {
           description: `Benvingut, ${response.user.fullName}`,
         });
         
-        navigate("/");
+        // Añadimos un pequeño retraso antes de navegar para asegurar 
+        // que el localStorage se actualice completamente
+        setTimeout(() => {
+          console.log("Redirigiendo a la página principal...");
+          navigate("/");
+        }, 100);
       } else {
         // Guardamos el mensaje de error para mostrarlo en el formulario
         console.error("Error de autenticación:", response.error);
