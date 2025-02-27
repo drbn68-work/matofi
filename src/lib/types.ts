@@ -34,8 +34,10 @@ export interface LoginResponse {
 
 export interface UserInfo {
   name: string;
+  fullName?: string; // Añadimos esto para compatibilidad
   department: string;
   costCenter: string;
+  email?: string; // Añadimos esto para compatibilidad
 }
 
 export interface CartReviewFormProps {
