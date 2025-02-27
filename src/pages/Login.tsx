@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Check } from "lucide-react";
 import { loginWithLDAP } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -24,12 +25,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Toggle } from "@/components/ui/toggle";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  username: z.string().min(1, "Nombre de usuario requerido"),
-  password: z.string().min(1, "Contraseña requerida"),
-  costCenter: z.string().min(1, "Centro de coste requerido"),
+  username: z.string().min(1, "Nom d'usuari requerit"),
+  password: z.string().min(1, "Contrasenya requerida"),
+  costCenter: z.string().min(1, "Centre de cost requerit"),
   authType: z.enum(["ldap", "local"]).default("ldap"),
 });
 
@@ -54,9 +55,11 @@ const Login = () => {
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     
-    // Usar el authType del estado local
-    const loginData = {
-      ...data, 
+    // Incluir el tipo de autenticación en los datos
+    const loginData: LoginCredentials = {
+      username: data.username,
+      password: data.password,
+      costCenter: data.costCenter,
       authType
     };
     
@@ -67,8 +70,8 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(response.user));
         
         toast({
-          title: "Inicio de sesión exitoso",
-          description: `Bienvenido, ${response.user.fullName}`,
+          title: "Inici de sessió exitós",
+          description: `Benvingut, ${response.user.fullName}`,
         });
         
         navigate("/");
@@ -76,15 +79,15 @@ const Login = () => {
         toast({
           variant: "destructive",
           title: "Error",
-          description: response.error || "Error de autenticación",
+          description: response.error || "Error d'autenticació",
         });
       }
     } catch (error) {
-      console.error("Error de inicio de sesión:", error);
+      console.error("Error d'inici de sessió:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Error al conectar con el servidor",
+        description: "Error al connectar amb el servidor",
       });
     } finally {
       setIsLoading(false);
@@ -94,12 +97,12 @@ const Login = () => {
   const handleAuthTypeChange = (type: "ldap" | "local") => {
     setAuthType(type);
     
-    // Si se selecciona "local", auto-rellenar con las credenciales de prueba
+    // Si es selecciona "local", auto-emplenar amb les credencials de prova
     if (type === "local") {
       form.setValue("username", "testuser");
       form.setValue("password", "testuser");
     } else {
-      // Si volvemos a LDAP, limpiar los campos
+      // Si tornem a LDAP, netejar els camps si contenen les credencials de prova
       if (form.getValues("username") === "testuser") {
         form.setValue("username", "");
         form.setValue("password", "");
@@ -111,39 +114,26 @@ const Login = () => {
     <div className="flex h-screen items-center justify-center bg-gray-50">
       <Card className="w-[350px]">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Material d'Oficina</CardTitle>
-          <CardDescription>
-            Accede a la aplicación
-          </CardDescription>
+          <div className="flex justify-center mb-2">
+            <img 
+              src="/lovable-uploads/167dfe77-7dcb-491e-965c-7a888b9ad928.png" 
+              alt="Fundació Puigvert" 
+              className="h-16"
+            />
+          </div>
+          <CardTitle className="text-xl">Sol·licitud de Material d'Oficina</CardTitle>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-4">
-              <div className="flex justify-center space-x-4 mb-2">
-                <Toggle
-                  pressed={authType === "ldap"}
-                  onPressedChange={() => handleAuthTypeChange("ldap")}
-                  className="data-[state=on]:bg-blue-500"
-                >
-                  LDAP
-                </Toggle>
-                <Toggle
-                  pressed={authType === "local"}
-                  onPressedChange={() => handleAuthTypeChange("local")}
-                  className="data-[state=on]:bg-green-500"
-                >
-                  Local
-                </Toggle>
-              </div>
-              
               <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre de usuario</FormLabel>
+                    <FormLabel>Usuari</FormLabel>
                     <FormControl>
-                      <Input placeholder="usuario" {...field} />
+                      <Input placeholder="usuari" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -154,7 +144,7 @@ const Login = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contraseña</FormLabel>
+                    <FormLabel>Contrasenya</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
@@ -167,23 +157,53 @@ const Login = () => {
                 name="costCenter"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Centro de coste</FormLabel>
+                    <FormLabel>Centre de Cost</FormLabel>
                     <FormControl>
-                      <Input placeholder="Centro de coste" {...field} />
+                      <Input placeholder="Centre de cost" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex flex-col space-y-4">
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-blue-800 hover:bg-blue-900"
                 disabled={isLoading}
               >
-                {isLoading ? "Autenticando..." : "Iniciar sesión"}
+                {isLoading ? "Autenticant..." : "Iniciar Sessió"}
               </Button>
+              
+              <div className="flex justify-center space-x-8 w-full pt-2">
+                <div 
+                  className="flex items-center space-x-2 cursor-pointer" 
+                  onClick={() => handleAuthTypeChange("ldap")}
+                >
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center ${
+                    authType === "ldap" 
+                      ? "bg-blue-500 border-blue-500" 
+                      : "border-gray-300"
+                  }`}>
+                    {authType === "ldap" && <Check className="h-4 w-4 text-white" />}
+                  </div>
+                  <span className="text-sm">LDAP</span>
+                </div>
+                
+                <div 
+                  className="flex items-center space-x-2 cursor-pointer" 
+                  onClick={() => handleAuthTypeChange("local")}
+                >
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center ${
+                    authType === "local" 
+                      ? "bg-green-500 border-green-500" 
+                      : "border-gray-300"
+                  }`}>
+                    {authType === "local" && <Check className="h-4 w-4 text-white" />}
+                  </div>
+                  <span className="text-sm">Local</span>
+                </div>
+              </div>
             </CardFooter>
           </form>
         </Form>

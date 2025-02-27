@@ -7,6 +7,18 @@ export interface Product {
   ubicacion: string;
 }
 
+export interface User {
+  username: string;
+  fullName: string;
+  costCenter: string;
+  department: string;
+}
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+}
+
 export interface LoginCredentials {
   username: string;
   password: string;
@@ -16,11 +28,16 @@ export interface LoginCredentials {
 
 export interface LoginResponse {
   success: boolean;
-  user?: {
-    username: string;
-    fullName: string;
-    costCenter: string;
-    department: string;
-  };
+  user?: User;
   error?: string;
+}
+
+export interface CartReviewFormProps {
+  onSubmit: () => void;
+  onCancel: () => void;
+}
+
+export interface CartOrderConfirmationProps {
+  onClose: () => void;
+  orderNumber: string;
 }
