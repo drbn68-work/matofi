@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { ExclamationTriangleIcon } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { loginWithLDAP } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -120,7 +120,7 @@ const LoginForm = () => {
         <div className="space-y-4">
           {errorMessage && (
             <Alert variant="destructive" className="mb-4 border-red-500 text-red-500">
-              <ExclamationTriangleIcon className="h-4 w-4" />
+              <AlertTriangle className="h-4 w-4" />
               <AlertTitle className="text-sm font-medium">Error d'autenticació</AlertTitle>
               <AlertDescription className="text-xs">
                 {errorMessage}
