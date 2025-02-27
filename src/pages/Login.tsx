@@ -24,17 +24,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Toggle } from "@/components/ui/toggle";
 
 const formSchema = z.object({
   username: z.string().min(1, "Nombre de usuario requerido"),
   password: z.string().min(1, "Contraseña requerida"),
   costCenter: z.string().min(1, "Centro de coste requerido"),
+  authType: z.enum(["ldap", "local"]).default("ldap"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [authType, setAuthType] = useState<"ldap" | "local">("ldap");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -44,13 +47,21 @@ const Login = () => {
       username: "",
       password: "",
       costCenter: "",
+      authType: "ldap",
     },
   });
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
+    
+    // Usar el authType del estado local
+    const loginData = {
+      ...data, 
+      authType
+    };
+    
     try {
-      const response = await loginWithLDAP(data);
+      const response = await loginWithLDAP(loginData);
       
       if (response.success && response.user) {
         localStorage.setItem("user", JSON.stringify(response.user));
@@ -80,18 +91,51 @@ const Login = () => {
     }
   };
 
+  const handleAuthTypeChange = (type: "ldap" | "local") => {
+    setAuthType(type);
+    
+    // Si se selecciona "local", auto-rellenar con las credenciales de prueba
+    if (type === "local") {
+      form.setValue("username", "testuser");
+      form.setValue("password", "testuser");
+    } else {
+      // Si volvemos a LDAP, limpiar los campos
+      if (form.getValues("username") === "testuser") {
+        form.setValue("username", "");
+        form.setValue("password", "");
+      }
+    }
+  };
+
   return (
     <div className="flex h-screen items-center justify-center bg-gray-50">
       <Card className="w-[350px]">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Material d'Oficina</CardTitle>
           <CardDescription>
-            Accede con tus credenciales LDAP
+            Accede a la aplicación
           </CardDescription>
         </CardHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <CardContent className="space-y-4">
+              <div className="flex justify-center space-x-4 mb-2">
+                <Toggle
+                  pressed={authType === "ldap"}
+                  onPressedChange={() => handleAuthTypeChange("ldap")}
+                  className="data-[state=on]:bg-blue-500"
+                >
+                  LDAP
+                </Toggle>
+                <Toggle
+                  pressed={authType === "local"}
+                  onPressedChange={() => handleAuthTypeChange("local")}
+                  className="data-[state=on]:bg-green-500"
+                >
+                  Local
+                </Toggle>
+              </div>
+              
               <FormField
                 control={form.control}
                 name="username"
@@ -143,14 +187,6 @@ const Login = () => {
             </CardFooter>
           </form>
         </Form>
-
-        <CardFooter className="flex flex-col items-center pt-0">
-          <div className="text-xs text-gray-500 mt-4">
-            Nota: Si el LDAP no está disponible, puedes usar:<br />
-            Usuario: testuser<br />
-            Contraseña: testuser
-          </div>
-        </CardFooter>
       </Card>
     </div>
   );

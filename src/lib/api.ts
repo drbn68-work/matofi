@@ -69,29 +69,34 @@ const mockCategories = [...new Set(mockProducts.map(p => p.ubicacion))];
 
 export const loginWithLDAP = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
-    // Intentar la autenticación LDAP a través de la API
+    // Si es autenticación local (solo para admin/desarrollo)
+    if (credentials.authType === 'local') {
+      if (credentials.username === 'testuser' && credentials.password === 'testuser') {
+        return {
+          success: true,
+          user: {
+            username: credentials.username,
+            fullName: `Usuario de Prueba (${credentials.username})`,
+            costCenter: credentials.costCenter,
+            department: 'Departamento de Prueba'
+          }
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Credenciales locales inválidas'
+        };
+      }
+    }
+    
+    // Si es autenticación LDAP (predeterminada)
     const response = await api.post('/auth/login', credentials);
     return response.data;
   } catch (error) {
-    console.error('Error en autenticación LDAP:', error);
-    
-    // Si el servicio LDAP no está disponible o falla, intentar con las credenciales de prueba
-    if (credentials.username === 'testuser' && credentials.password === 'testuser') {
-      return {
-        success: true,
-        user: {
-          username: credentials.username,
-          fullName: `Usuario de Prueba (${credentials.username})`,
-          costCenter: credentials.costCenter,
-          department: 'Departamento de Prueba'
-        }
-      };
-    }
-    
-    // Si no son las credenciales de prueba, rechazar la autenticación
+    console.error('Error en autenticación:', error);
     return {
       success: false,
-      error: 'Credenciales inválidas o servicio LDAP no disponible'
+      error: 'Error en la autenticación. Servicio no disponible.'
     };
   }
 };
