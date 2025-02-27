@@ -84,19 +84,52 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
       } else {
         return {
           success: false,
-          error: 'Credenciales locales inválidas'
+          error: 'Credenciales locales inválidas. Por favor, use "testuser" como usuario y contraseña para el modo local.'
         };
       }
     }
     
     // Si es autenticación LDAP (predeterminada)
-    const response = await api.post('/auth/login', credentials);
-    return response.data;
-  } catch (error) {
-    console.error('Error en autenticación:', error);
+    try {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    } catch (error: any) {
+      // Extraemos información más detallada del error
+      console.error('Error detallado de autenticación LDAP:', error);
+      
+      let errorMessage = 'Error de conexión con el servidor LDAP';
+      
+      if (error.response) {
+        // El servidor respondió con un código de error
+        const statusCode = error.response.status;
+        const serverError = error.response.data?.error || '';
+        
+        if (statusCode === 401) {
+          errorMessage = 'Usuario o contraseña incorrectos. Verifique sus credenciales LDAP.';
+        } else if (statusCode === 404) {
+          errorMessage = 'Usuario no encontrado en el directorio LDAP.';
+        } else if (statusCode === 403) {
+          errorMessage = 'Este usuario no tiene permisos para acceder. Contacte con el administrador.';
+        } else if (statusCode === 400) {
+          errorMessage = 'Datos incompletos o inválidos. Verifique el centro de coste.';
+        } else if (serverError) {
+          errorMessage = `Error del servidor: ${serverError}`;
+        }
+      } else if (error.request) {
+        // No se recibió respuesta del servidor
+        errorMessage = 'No se obtuvo respuesta del servidor LDAP. Verifique la conexión de red o contacte con soporte técnico.';
+      }
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
+  } catch (error: any) {
+    console.error('Error general en autenticación:', error);
     return {
       success: false,
-      error: 'Error en la autenticación. Servicio no disponible.'
+      error: 'Error inesperado en la autenticación. Por favor, contacte con soporte técnico.'
     };
   }
 };

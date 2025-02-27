@@ -4,6 +4,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ExclamationTriangleIcon } from "lucide-react";
 import { loginWithLDAP } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -31,6 +33,7 @@ type FormValues = z.infer<typeof formSchema>;
 const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [authType, setAuthType] = useState<"ldap" | "local">("ldap");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,6 +49,7 @@ const LoginForm = () => {
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
     
     // Incluir el tipo de autenticación en los datos
     const loginData: LoginCredentials = {
@@ -68,14 +72,21 @@ const LoginForm = () => {
         
         navigate("/");
       } else {
+        // Guardamos el mensaje de error para mostrarlo en el formulario
+        setErrorMessage(response.error || "Error d'autenticació");
+        
         toast({
           variant: "destructive",
-          title: "Error",
+          title: "Error d'autenticació",
           description: response.error || "Error d'autenticació",
         });
       }
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : "Error desconegut";
       console.error("Error d'inici de sessió:", error);
+      
+      setErrorMessage(`Error de connexió: ${errorMsg}`);
+      
       toast({
         variant: "destructive",
         title: "Error",
@@ -88,6 +99,7 @@ const LoginForm = () => {
 
   const handleAuthTypeChange = (type: "ldap" | "local") => {
     setAuthType(type);
+    setErrorMessage(null);
     
     // Si es selecciona "local", auto-emplenar amb les credencials de prova
     if (type === "local") {
@@ -106,6 +118,16 @@ const LoginForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="space-y-4">
+          {errorMessage && (
+            <Alert variant="destructive" className="mb-4 border-red-500 text-red-500">
+              <ExclamationTriangleIcon className="h-4 w-4" />
+              <AlertTitle className="text-sm font-medium">Error d'autenticació</AlertTitle>
+              <AlertDescription className="text-xs">
+                {errorMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+        
           <FormField
             control={form.control}
             name="username"
