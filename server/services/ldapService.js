@@ -1,37 +1,39 @@
-
-const ldap = require('ldapjs');
-const config = require('../config/ldapConfig');
+import ldap from 'ldapjs';
+import config from '../config/ldapConfig.js';
 
 class LDAPService {
   constructor() {
     this.client = ldap.createClient({
       url: config.url,
-      reconnect: true
+      reconnect: true,
+      tlsOptions: { rejectUnauthorized: false }
     });
 
     this.client.on('error', (err) => {
-      console.error('LDAP connection error:', err);
+      console.error('🚨 LDAP connection error:', err);
     });
   }
 
-  async authenticate(username, password, costCenter) {
+  async authenticate(username, password) {
     return new Promise((resolve, reject) => {
-      // Primero buscamos al usuario
-      const searchOptions = {
-        scope: 'sub',
-        filter: `(&(uid=${username})(costCenter=${costCenter}))`,
-        attributes: ['dn', 'cn', 'uid', 'departmentNumber']
-      };
-
+      // Bind inicial con FP\matofi_bind
       this.client.bind(config.bindDN, config.bindCredentials, (bindErr) => {
         if (bindErr) {
-          console.error('Error en bind inicial:', bindErr);
-          return reject(bindErr);
+          console.error("🚨 Error en bind inicial:", bindErr);
+          return reject(new Error('Error en la conexión al servidor LDAP'));
         }
+        console.log("✅ Bind inicial exitoso con", config.bindDN);
+
+        // Búsqueda por sAMAccountName
+        const searchOptions = {
+          scope: 'sub',
+          filter: `(sAMAccountName=${username})`,
+          attributes: ['dn', 'cn', 'sAMAccountName']
+        };
 
         this.client.search(config.baseDN, searchOptions, (searchErr, res) => {
           if (searchErr) {
-            console.error('Error en búsqueda:', searchErr);
+            console.error("🚨 Error al buscar el usuario en LDAP:", searchErr);
             return reject(searchErr);
           }
 
@@ -39,38 +41,74 @@ class LDAPService {
 
           res.on('searchEntry', (entry) => {
             userFound = true;
-            const userDN = entry.objectName;
-            const userData = entry.attributes.reduce((acc, attr) => {
-              acc[attr.type] = attr.vals[0];
-              return acc;
-            }, {});
+            console.log("🔍 Entrada LDAP recibida:", entry);
 
-            // Intentamos autenticar con las credenciales del usuario
+            // Obtener el DN: se usa entry.object.dn o entry.objectName y se convierte a cadena
+            let rawDN = (entry.object && entry.object.dn) || entry.objectName;
+            const userDN = rawDN && typeof rawDN.toString === 'function' ? rawDN.toString() : rawDN;
+            if (!userDN || typeof userDN !== 'string' || userDN.trim() === "") {
+              console.error("❌ Error: No se encontró un DN válido para el usuario", entry);
+              return reject(new Error('Error interno: No se encontró DN del usuario'));
+            }
+
+            // Reconstruir datos del usuario:
+            let entryData = null;
+            if (entry.object && Object.keys(entry.object).length > 0) {
+              entryData = entry.object;
+            } else if (entry.pojo) {
+              entryData = {};
+              if (Array.isArray(entry.pojo.attributes)) {
+                entry.pojo.attributes.forEach(attr => {
+                  // Forzamos la clave a minúsculas para consistencia
+                  entryData[attr.type.toLowerCase()] = attr.values[0];
+                });
+              }
+              // Asignamos el DN usando objectName
+              entryData.dn = entry.pojo.objectName;
+              console.log("🔎 Se reconstruyó entryData desde 'entry.pojo':", entryData);
+            }
+            if (!entryData) {
+              console.error("❌ Error: No se pudo extraer datos del usuario:", entry);
+              return reject(new Error('Error interno: No se pudo extraer datos del usuario'));
+            }
+
+            console.log("✅ Usuario encontrado:", entryData);
+            console.log("🔑 Intentando autenticar con DN:", userDN);
+            console.log("🔑 Tipo de password recibido:", typeof password);
+            console.log("🔑 Password recibido (enmascarado):", password ? '*'.repeat(password.length) : "No definido");
+
+            if (typeof userDN !== 'string' || typeof password !== 'string') {
+              console.error("❌ Error: `userDN` o `password` no son cadenas válidas", { userDN, password });
+              return reject(new Error('Error interno: Formato inválido de credenciales'));
+            }
+
+            // Bind con las credenciales del usuario
             this.client.bind(userDN, password, (err) => {
               if (err) {
-                console.error('Error en autenticación:', err);
+                console.error("❌ Error en autenticación del usuario:", err);
                 return reject(new Error('Credenciales inválidas'));
               }
 
+              console.log("🔓 Autenticación exitosa para", username);
               resolve({
                 success: true,
                 user: {
-                  username: userData.uid,
-                  fullName: userData.cn,
-                  department: userData.departmentNumber,
-                  costCenter: costCenter
+                  // Usamos las claves en minúsculas que hemos definido en el objeto reconstruido
+                  username: entryData.samaccountname, 
+                  fullName: entryData.cn
                 }
               });
             });
           });
 
           res.on('error', (err) => {
-            console.error('Error en búsqueda:', err);
+            console.error("🚨 Error en búsqueda de usuario:", err);
             reject(err);
           });
 
           res.on('end', () => {
             if (!userFound) {
+              console.error("❌ Usuario no encontrado en LDAP");
               reject(new Error('Usuario no encontrado'));
             }
           });
@@ -80,4 +118,4 @@ class LDAPService {
   }
 }
 
-module.exports = new LDAPService();
+export default new LDAPService();
