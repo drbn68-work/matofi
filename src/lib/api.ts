@@ -90,14 +90,45 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
     }
     
     // Si es autenticación LDAP (predeterminada)
+    console.log('Intentando autenticación LDAP con:', { 
+      username: credentials.username, 
+      costCenter: credentials.costCenter,
+      // No mostramos la contraseña por seguridad
+      authType: credentials.authType 
+    });
+
     try {
+      console.log(`Enviando solicitud a ${API_BASE_URL}/auth/login`);
       const response = await api.post('/auth/login', credentials);
+      console.log('Respuesta del servidor LDAP:', response.data);
       return response.data;
     } catch (error: any) {
-      // Extraemos información más detallada del error
-      console.error('Error detallado de autenticación LDAP:', error);
+      // Extraemos información detallada del error para debugging
+      console.error('Error completo de autenticación LDAP:', error);
+      
+      // Crear un objeto con todos los detalles del error para depuración
+      const errorDetails = {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        code: error.code,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        headers: error.response?.headers,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers,
+          timeout: error.config?.timeout,
+          baseURL: error.config?.baseURL
+        }
+      };
+      
+      console.error('Detalles completos del error:', JSON.stringify(errorDetails, null, 2));
       
       let errorMessage = 'Error de conexión con el servidor LDAP';
+      let errorDetail = '';
       
       if (error.response) {
         // El servidor respondió con un código de error
@@ -105,31 +136,57 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
         const serverError = error.response.data?.error || '';
         
         if (statusCode === 401) {
-          errorMessage = 'Usuario o contraseña incorrectos. Verifique sus credenciales LDAP.';
+          errorMessage = 'Usuario o contraseña incorrectos';
+          errorDetail = 'Verifique sus credenciales LDAP y asegúrese de que tiene permiso para acceder.';
         } else if (statusCode === 404) {
-          errorMessage = 'Usuario no encontrado en el directorio LDAP.';
+          errorMessage = 'Usuario no encontrado en el directorio LDAP';
+          errorDetail = `El usuario "${credentials.username}" no existe en el directorio LDAP o no está asociado al centro de coste especificado.`;
         } else if (statusCode === 403) {
-          errorMessage = 'Este usuario no tiene permisos para acceder. Contacte con el administrador.';
+          errorMessage = 'Acceso denegado';
+          errorDetail = 'Este usuario no tiene permisos para acceder a la aplicación. Contacte con el administrador.';
         } else if (statusCode === 400) {
-          errorMessage = 'Datos incompletos o inválidos. Verifique el centro de coste.';
-        } else if (serverError) {
-          errorMessage = `Error del servidor: ${serverError}`;
+          errorMessage = 'Datos incompletos o inválidos';
+          errorDetail = `Verifique que todos los campos sean correctos. Error del servidor: ${serverError}`;
+        } else {
+          errorMessage = `Error del servidor (${statusCode})`;
+          errorDetail = serverError || 'El servidor devolvió un error no especificado';
         }
       } else if (error.request) {
         // No se recibió respuesta del servidor
-        errorMessage = 'No se obtuvo respuesta del servidor LDAP. Verifique la conexión de red o contacte con soporte técnico.';
+        errorMessage = 'No se obtuvo respuesta del servidor LDAP';
+        errorDetail = `La petición fue enviada pero no se recibió respuesta. Detalles: ${error.message}. Verifique:
+        1. Que el servidor esté en funcionamiento
+        2. Que la URL ${API_BASE_URL} sea accesible
+        3. Que no haya problemas de red o cortafuegos bloqueando la conexión
+        4. Que el servidor LDAP esté configurado correctamente`;
+      } else {
+        // Error al configurar la solicitud
+        errorMessage = 'Error al preparar la solicitud';
+        errorDetail = `No se pudo configurar la petición: ${error.message}`;
       }
+      
+      // Creamos un mensaje de error completo para mostrar al usuario
+      const fullErrorMessage = `${errorMessage}\n\n${errorDetail}\n\nDetalles técnicos: ${error.message}`;
       
       return {
         success: false,
-        error: errorMessage
+        error: fullErrorMessage
       };
     }
   } catch (error: any) {
     console.error('Error general en autenticación:', error);
+    const detailedError = `
+      Error inesperado en la autenticación: ${error.message}
+      
+      Stack trace: ${error.stack || 'No disponible'}
+      
+      Este es probablemente un error de programación o configuración.
+      Por favor, contacte con soporte técnico y proporcione estos detalles.
+    `;
+    
     return {
       success: false,
-      error: 'Error inesperado en la autenticación. Por favor, contacte con soporte técnico.'
+      error: detailedError
     };
   }
 };

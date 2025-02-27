@@ -60,9 +60,11 @@ const LoginForm = () => {
     };
     
     try {
+      console.log("Iniciando proceso de autenticación...");
       const response = await loginWithLDAP(loginData);
       
       if (response.success && response.user) {
+        console.log("Autenticación exitosa:", response.user);
         localStorage.setItem("user", JSON.stringify(response.user));
         
         toast({
@@ -73,12 +75,13 @@ const LoginForm = () => {
         navigate("/");
       } else {
         // Guardamos el mensaje de error para mostrarlo en el formulario
-        setErrorMessage(response.error || "Error d'autenticació");
+        console.error("Error de autenticación:", response.error);
+        setErrorMessage(response.error || "Error d'autenticació desconegut");
         
         toast({
           variant: "destructive",
           title: "Error d'autenticació",
-          description: response.error || "Error d'autenticació",
+          description: "S'ha produït un error. Consulta els detalls a continuació.",
         });
       }
     } catch (error) {
@@ -105,13 +108,24 @@ const LoginForm = () => {
     if (type === "local") {
       form.setValue("username", "testuser");
       form.setValue("password", "testuser");
+      form.setValue("costCenter", "1234");  // Añadir un centro de coste por defecto
     } else {
       // Si tornem a LDAP, netejar els camps si contenen les credencials de prova
       if (form.getValues("username") === "testuser") {
         form.setValue("username", "");
         form.setValue("password", "");
+        form.setValue("costCenter", "");
       }
     }
+  };
+
+  // Función para formatear el mensaje de error con saltos de línea
+  const formatErrorMessage = (message: string) => {
+    return message.split('\n').map((line, index) => (
+      <span key={index} className="block">
+        {line}
+      </span>
+    ));
   };
 
   return (
@@ -119,11 +133,11 @@ const LoginForm = () => {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <div className="space-y-4">
           {errorMessage && (
-            <Alert variant="destructive" className="mb-4 border-red-500 text-red-500">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle className="text-sm font-medium">Error d'autenticació</AlertTitle>
-              <AlertDescription className="text-xs">
-                {errorMessage}
+            <Alert variant="destructive" className="mb-4 border-red-500 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <AlertTitle className="text-sm font-medium text-red-600">Error d'autenticació</AlertTitle>
+              <AlertDescription className="mt-2 text-xs text-red-600 max-h-60 overflow-y-auto">
+                {formatErrorMessage(errorMessage)}
               </AlertDescription>
             </Alert>
           )}
