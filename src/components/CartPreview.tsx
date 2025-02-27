@@ -66,6 +66,14 @@ export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: C
     });
   };
 
+  // Función para manejar el cierre de la confirmación del pedido
+  const handleClose = () => {
+    setIsSubmitted(false);
+  };
+
+  // Generamos un número de pedido único
+  const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+
   return (
     <Sheet>
       <SheetTrigger>
@@ -78,6 +86,8 @@ export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: C
 
         {isSubmitted ? (
           <CartOrderConfirmation
+            onClose={handleClose}
+            orderNumber={orderNumber}
             items={submittedItems}
             userInfo={userInfo}
             deliveryLocation={deliveryLocation}

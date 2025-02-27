@@ -32,17 +32,9 @@ export interface LoginResponse {
   error?: string;
 }
 
-export interface UserInfo {
-  name: string;
-  fullName?: string; // Añadimos esto para compatibilidad
-  department: string;
-  costCenter: string;
-  email?: string; // Añadimos esto para compatibilidad
-}
-
 export interface CartReviewFormProps {
   items: CartItem[];
-  userInfo: UserInfo;
+  userInfo: import('@/components/cart/types').UserInfo;
   deliveryLocation: string;
   comments: string;
   onRemove: (productId: string) => void;
@@ -56,7 +48,7 @@ export interface CartOrderConfirmationProps {
   onClose: () => void;
   orderNumber: string;
   items: CartItem[];
-  userInfo: UserInfo;
+  userInfo: import('@/components/cart/types').UserInfo;
   deliveryLocation: string;
   comments: string;
 }
