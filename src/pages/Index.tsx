@@ -5,7 +5,7 @@ import { getProducts, getCategories } from "@/lib/data";
 import { logout } from "@/lib/api";
 import { CartItem, Product } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, ShoppingCart, Search, Plus, Minus } from "lucide-react";
+import { LogOut, ShoppingCart, Search, Plus, Minus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -17,14 +17,37 @@ const Index = () => {
   const [categories, setCategories] = useState<string[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Cargar información del usuario desde sessionStorage primero
+    const storedUser = sessionStorage.getItem('auth_user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Error al analizar usuario almacenado:", e);
+      }
+    }
+    
     // Cargar productos y categorías
     const loadData = async () => {
       try {
+        setIsLoading(true);
+        setLoadError(null);
+        console.log('Cargando productos...');
+        
         const loadedProducts = await getProducts();
+        console.log(`${loadedProducts.length} productos cargados`);
+        
+        if (loadedProducts.length === 0) {
+          setLoadError("No se han podido cargar los productos. Intente recargar la página.");
+          return;
+        }
+        
         setProducts(loadedProducts);
         
         const loadedCategories = getCategories(loadedProducts);
@@ -36,28 +59,27 @@ const Index = () => {
           initialQuantities[product.id] = 0;
         });
         setQuantities(initialQuantities);
+        
+        // Mostrar toast de éxito
+        toast({
+          title: "Productos cargados",
+          description: `${loadedProducts.length} productos disponibles`,
+        });
       } catch (error) {
         console.error('Error cargando datos:', error);
+        setLoadError("Error al cargar los productos. Por favor, intente nuevamente.");
         toast({
           variant: "destructive",
           title: "Error",
           description: "No s'han pogut carregar les dades",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadData();
-    
-    // Cargar información del usuario desde sessionStorage
-    const storedUser = sessionStorage.getItem('auth_user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Error al analizar usuario almacenado:", e);
-      }
-    }
-  }, []);
+  }, [toast]);
 
   const handleLogout = async () => {
     try {
@@ -81,7 +103,7 @@ const Index = () => {
     const matchesSearch = search.trim() === '' || 
       product.descripcion.toLowerCase().includes(search.toLowerCase()) ||
       product.codsap.includes(search) ||
-      product.codas400.includes(search);
+      (product.codas400 && product.codas400.includes(search));
     
     const matchesCategory = !selectedCategory || product.ubicacion === selectedCategory;
     
@@ -186,85 +208,113 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Categorías */}
+      {/* Contenido principal */}
       <div className="container mx-auto pt-24">
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <Button
-            variant={!selectedCategory ? "default" : "outline"}
-            className="rounded-full text-xs"
-            onClick={() => setSelectedCategory(null)}
-          >
-            Tot
-          </Button>
-          
-          {categories.map((category) => (
+        {/* Categorías */}
+        {!isLoading && categories.length > 0 && (
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <Button
-              key={category}
-              variant={selectedCategory === category ? "default" : "outline"}
+              variant={!selectedCategory ? "default" : "outline"}
               className="rounded-full text-xs"
-              onClick={() => handleCategorySelect(category)}
+              onClick={() => setSelectedCategory(null)}
             >
-              {category}
+              Tot
             </Button>
-          ))}
-        </div>
+            
+            {categories.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                className="rounded-full text-xs"
+                onClick={() => handleCategorySelect(category)}
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        )}
+
+        {/* Estado de carga */}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-500 mb-4" />
+            <p className="text-gray-600">Cargando productos...</p>
+          </div>
+        )}
+
+        {/* Mensaje de error */}
+        {!isLoading && loadError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-8 text-center my-8">
+            <p className="text-red-600 mb-4">{loadError}</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              variant="outline"
+            >
+              Recargar página
+            </Button>
+          </div>
+        )}
 
         {/* Lista de productos */}
-        <div className="space-y-4">
-          {filteredProducts.map((product) => (
-            <div 
-              key={product.id}
-              className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm"
-            >
-              <div className="flex-1">
-                <div className="flex gap-2 mb-1">
-                  <Badge variant="secondary" className="text-xs">
-                    SAP: {product.codsap}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    AS400: {product.codas400}
-                  </Badge>
+        {!isLoading && !loadError && (
+          <div className="space-y-4">
+            {filteredProducts.map((product) => (
+              <div 
+                key={product.id}
+                className="flex items-center justify-between rounded-lg border bg-white p-4 shadow-sm"
+              >
+                <div className="flex-1">
+                  <div className="flex gap-2 mb-1">
+                    <Badge variant="secondary" className="text-xs">
+                      SAP: {product.codsap}
+                    </Badge>
+                    {product.codas400 && (
+                      <Badge variant="outline" className="text-xs">
+                        AS400: {product.codas400}
+                      </Badge>
+                    )}
+                  </div>
+                  <h3 className="text-sm font-medium">{product.descripcion}</h3>
                 </div>
-                <h3 className="text-sm font-medium">{product.descripcion}</h3>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
+                
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleUpdateQuantity(product.id, -1)}
+                      className="h-8 w-8"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </Button>
+                    <span className="w-6 text-center">{quantities[product.id] || 0}</span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => handleUpdateQuantity(product.id, 1)}
+                      className="h-8 w-8"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </Button>
+                  </div>
                   <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleUpdateQuantity(product.id, -1)}
-                    className="h-8 w-8"
+                    onClick={() => handleAddToCart(product)}
+                    disabled={!quantities[product.id]}
+                    className="bg-blue-100 text-blue-800 hover:bg-blue-200"
                   >
-                    <Minus className="h-3 w-3" />
-                  </Button>
-                  <span className="w-6 text-center">{quantities[product.id] || 0}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleUpdateQuantity(product.id, 1)}
-                    className="h-8 w-8"
-                  >
-                    <Plus className="h-3 w-3" />
+                    Afegir
                   </Button>
                 </div>
-                <Button
-                  onClick={() => handleAddToCart(product)}
-                  disabled={!quantities[product.id]}
-                  className="bg-blue-100 text-blue-800 hover:bg-blue-200"
-                >
-                  Afegir
-                </Button>
               </div>
-            </div>
-          ))}
-          
-          {filteredProducts.length === 0 && (
-            <div className="flex justify-center py-10">
-              <p className="text-gray-500">No s'han trobat productes</p>
-            </div>
-          )}
-        </div>
+            ))}
+            
+            {filteredProducts.length === 0 && !isLoading && !loadError && (
+              <div className="flex justify-center py-10">
+                <p className="text-gray-500">No s'han trobat productes</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -2,24 +2,47 @@
 import { Product } from "./types";
 import Papa from 'papaparse';
 
+// Agregamos una variable para cachear los productos y no tener que cargarlos repetidamente
+let cachedProducts: Product[] | null = null;
+
 const parseCsvProducts = async (): Promise<Product[]> => {
+  // Si ya tenemos los productos en caché, los devolvemos inmediatamente
+  if (cachedProducts !== null && cachedProducts.length > 0) {
+    console.log(`Usando ${cachedProducts.length} productos en caché`);
+    return cachedProducts;
+  }
+
   try {
+    console.log('Iniciando carga del archivo CSV...');
     const response = await fetch('/catalogomatofi.csv');
+    
+    if (!response.ok) {
+      throw new Error(`Error cargando CSV: ${response.status} ${response.statusText}`);
+    }
+    
     const csvData = await response.text();
+    console.log(`CSV cargado, tamaño: ${csvData.length} bytes`);
     
     return new Promise((resolve, reject) => {
       Papa.parse(csvData, {
         header: true,
+        skipEmptyLines: true,
         complete: (results) => {
-          const products = results.data.map((row: any) => ({
-            id: row.codsap, // Usamos codsap como ID
-            codsap: row.codsap,
-            codas400: row.codas400,
-            descripcion: row.descripcion,
-            ubicacion: row.ubicacion
-          })).filter((product: any) => product.codsap && product.descripcion); // Filtramos productos inválidos
+          const products = results.data
+            .filter((row: any) => row.codsap && row.descripcion) // Filtramos productos inválidos
+            .map((row: any) => ({
+              id: row.codsap, // Usamos codsap como ID
+              codsap: row.codsap,
+              codas400: row.codas400 || '',
+              descripcion: row.descripcion,
+              ubicacion: row.ubicacion || 'SIN UBICACIÓN'
+            }));
           
-          console.log(`CSV cargado: ${products.length} productos encontrados`);
+          console.log(`CSV procesado: ${products.length} productos encontrados (de ${results.data.length} filas)`);
+          
+          // Guardamos en caché para futuros usos
+          cachedProducts = products as Product[];
+          
           resolve(products as Product[]);
         },
         error: (error) => {
@@ -30,8 +53,9 @@ const parseCsvProducts = async (): Promise<Product[]> => {
     });
   } catch (error) {
     console.error('Error loading CSV:', error);
-    // Retornamos datos de ejemplo en caso de error
-    return [
+    
+    // Datos de ejemplo en caso de error
+    const fallbackProducts = [
       {
         id: "600560",
         codsap: "600560",
@@ -68,17 +92,23 @@ const parseCsvProducts = async (): Promise<Product[]> => {
         ubicacion: "FOTOCOPIA"
       }
     ];
+    
+    // También guardamos estos en caché para no repetir el error
+    cachedProducts = fallbackProducts;
+    
+    return fallbackProducts;
   }
 };
 
 // Extraemos las categorías únicas del CSV
 export const getCategories = (products: Product[]): string[] => {
   const uniqueCategories = new Set(products.map(product => product.ubicacion));
-  return Array.from(uniqueCategories);
+  return Array.from(uniqueCategories).sort();
 };
 
 // Exportamos los productos como una promesa
 export const getProducts = async (): Promise<Product[]> => {
+  console.log('Solicitando productos...');
   return await parseCsvProducts();
 };
 

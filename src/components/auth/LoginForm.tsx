@@ -5,12 +5,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { loginWithLDAP, testApiConnection } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import AuthTypeSelector from "./AuthTypeSelector";
 import { LoginCredentials } from "@/lib/types";
-import axios from "axios";
 
 const formSchema = z.object({
   username: z.string().min(1, "Nom d'usuari requerit"),
@@ -63,6 +62,12 @@ const LoginForm = () => {
     setIsLoading(true);
     setErrorMessage(null);
     
+    // Mostrar toast de carga
+    toast({
+      title: "Iniciant sessió",
+      description: "Verificant credencials...",
+    });
+    
     // Modo de desarrollo: permitir login local sin servidor
     if (authType === 'local' && data.username === 'testuser' && data.password === 'testuser' && !isServerAvailable) {
       // Simular autenticación exitosa para desarrollo sin servidor
@@ -80,13 +85,17 @@ const LoginForm = () => {
       sessionStorage.setItem('auth_user', JSON.stringify(mockUser));
       sessionStorage.setItem('is_authenticated', 'true');
       
-      toast({
-        title: "Inici de sessió exitós (Modo Desarrollo)",
-        description: `Benvingut, ${mockUser.fullName}`,
-      });
+      // Simulamos un pequeño retraso para que el usuario vea el estado de carga
+      setTimeout(() => {
+        toast({
+          title: "Inici de sessió exitós (Modo Desarrollo)",
+          description: `Benvingut, ${mockUser.fullName}`,
+        });
+        
+        setIsLoading(false);
+        navigate("/");
+      }, 1000);
       
-      setIsLoading(false);
-      navigate("/");
       return;
     }
     
@@ -114,6 +123,15 @@ const LoginForm = () => {
           title: "Inici de sessió exitós",
           description: `Benvingut, ${response.user.fullName}`,
         });
+        
+        // Pre-cargar productos
+        try {
+          const { getProducts } = await import('@/lib/data');
+          console.log("Pre-cargando productos...");
+          getProducts().catch(e => console.error("Error en pre-carga:", e));
+        } catch (e) {
+          console.error("Error importando módulo de datos:", e);
+        }
         
         // Redirigimos a la página principal
         navigate("/");
@@ -204,6 +222,7 @@ const LoginForm = () => {
           {...form.register("username")}
           placeholder="usuari"
           className="w-full px-3 py-2 bg-blue-50 border border-gray-300 rounded text-gray-900"
+          disabled={isLoading}
         />
         {form.formState.errors.username && (
           <p className="text-sm text-red-600">{form.formState.errors.username.message}</p>
@@ -220,6 +239,7 @@ const LoginForm = () => {
           {...form.register("password")}
           placeholder="••••••••"
           className="w-full px-3 py-2 bg-blue-50 border border-gray-300 rounded text-gray-900"
+          disabled={isLoading}
         />
         {form.formState.errors.password && (
           <p className="text-sm text-red-600">{form.formState.errors.password.message}</p>
@@ -236,6 +256,7 @@ const LoginForm = () => {
           {...form.register("costCenter")}
           placeholder="Centre de cost"
           className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-gray-900"
+          disabled={isLoading}
         />
         {form.formState.errors.costCenter && (
           <p className="text-sm text-red-600">{form.formState.errors.costCenter.message}</p>
@@ -245,9 +266,16 @@ const LoginForm = () => {
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full px-4 py-2 text-white bg-[#1a365d] hover:bg-[#162e4d] rounded-md transition-colors"
+        className="w-full px-4 py-2 text-white bg-[#1a365d] hover:bg-[#162e4d] rounded-md transition-colors flex items-center justify-center"
       >
-        {isLoading ? "Autenticant..." : "Iniciar Sessió"}
+        {isLoading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Autenticant...
+          </>
+        ) : (
+          "Iniciar Sessió"
+        )}
       </button>
       
       <div className="pt-1">
