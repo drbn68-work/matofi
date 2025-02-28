@@ -22,7 +22,7 @@ export const CartOrderConfirmation = ({ items, userInfo, deliveryLocation, comme
       <div className="space-y-2">
         <h3 className="font-medium mb-2">Articles sol·licitats</h3>
         {items.map((item) => (
-          <div key={item.product.id} className="flex justify-between items-center border-b pb-2">
+          <div key={item.product.codsap} className="flex justify-between items-center border-b pb-2">
             <div>
               <p className="font-medium">{item.product.descripcion}</p>
               <p className="text-sm text-gray-500">

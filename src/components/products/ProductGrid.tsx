@@ -1,4 +1,3 @@
-
 import { ProductCard } from "@/components/ProductCard";
 import { Product } from "@/lib/types";
 
@@ -13,7 +12,7 @@ export const ProductGrid = ({ products, onAddToCart, isGridView }: ProductGridPr
     <div className={isGridView ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "flex flex-col gap-4"}>
       {products.map((product) => (
         <ProductCard
-          key={product.id}
+          key={product.codsap}
           product={product}
           onAddToCart={onAddToCart}
           compact={!isGridView}

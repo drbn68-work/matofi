@@ -1,92 +1,90 @@
-
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useNavigate } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { loginWithLDAP } from "@/lib/api";
+import { loginWithLDAP } from "@/lib/api"; // Asegúrate que loginWithLDAP retorne { success, user, error }
 import { useToast } from "@/hooks/use-toast";
 import AuthTypeSelector from "./AuthTypeSelector";
 import { LoginCredentials } from "@/lib/types";
 
+// Eliminamos la propiedad costCenter del esquema
 const formSchema = z.object({
   username: z.string().min(1, "Nom d'usuari requerit"),
   password: z.string().min(1, "Contrasenya requerida"),
-  costCenter: z.string().min(1, "Centre de cost requerit"),
   authType: z.enum(["ldap", "local"]).default("ldap"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-const LoginForm = () => {
+interface LoginFormProps {
+  onLoginSuccess: (userData: any) => void; // "any" o un tipo definido
+  onError: (errMsg: string) => void;
+}
+
+export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [authType, setAuthType] = useState<"ldap" | "local">("ldap");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Quitamos costCenter de defaultValues
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       username: "",
       password: "",
-      costCenter: "",
       authType: "ldap",
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: FormValues): Promise<void> => {
     setIsLoading(true);
     setErrorMessage(null);
-    
-    // Incluir el tipo de autenticación en los datos
+
+    // Ya no pasamos costCenter
     const loginData: LoginCredentials = {
       username: data.username,
       password: data.password,
-      costCenter: data.costCenter,
-      authType
+      authType,
     };
-    
+
     try {
       console.log("Iniciando proceso de autenticación...");
       const response = await loginWithLDAP(loginData);
-      
-      if (response.success && response.user) {
-        console.log("Autenticación exitosa:", response.user);
-        
-        // Guardamos la información del usuario en localStorage
-        localStorage.setItem("user", JSON.stringify(response.user));
-        
+
+      if (!response) {
+        throw new Error("No se ha recibido respuesta del servidor de autenticación.");
+      }
+
+      const { success, user, error } = response;
+
+      if (success && user) {
+        console.log("Autenticación exitosa:", user);
         toast({
           title: "Inici de sessió exitós",
-          description: `Benvingut, ${response.user.fullName}`,
+          description: `Benvingut, ${user.fullName}`,
         });
-        
-        // Añadimos un pequeño retraso antes de navegar para asegurar 
-        // que el localStorage se actualice completamente
-        setTimeout(() => {
-          console.log("Redirigiendo a la página principal...");
-          navigate("/");
-        }, 100);
+        onLoginSuccess(user);
       } else {
-        // Guardamos el mensaje de error para mostrarlo en el formulario
-        console.error("Error de autenticación:", response.error);
-        setErrorMessage(response.error || "Error d'autenticació desconegut");
-        
+        console.error("Error de autenticación:", error);
+        setErrorMessage(error || "Error d'autenticació desconegut");
+        onError(error || "Error d'autenticació desconegut");
+
         toast({
           variant: "destructive",
           title: "Error d'autenticació",
           description: "S'ha produït un error. Consulta els detalls a continuació.",
         });
       }
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Error desconegut";
-      console.error("Error d'inici de sessió:", error);
-      
+    } catch (err: any) {
+      const errorMsg = err instanceof Error ? err.message : "Error desconegut";
+      console.error("Error d'inici de sessió:", err);
+
       setErrorMessage(`Error de connexió: ${errorMsg}`);
-      
+      onError(`Error de connexió: ${errorMsg}`);
+
       toast({
         variant: "destructive",
         title: "Error",
@@ -100,25 +98,21 @@ const LoginForm = () => {
   const handleAuthTypeChange = (type: "ldap" | "local") => {
     setAuthType(type);
     setErrorMessage(null);
-    
-    // Si es selecciona "local", auto-emplenar amb les credencials de prova
+
     if (type === "local") {
       form.setValue("username", "testuser");
       form.setValue("password", "testuser");
-      form.setValue("costCenter", "1234");  // Añadir un centro de coste por defecto
+      // Se elimina costCenter, así que ya no rellenamos nada
     } else {
-      // Si tornem a LDAP, netejar els camps si contenen les credencials de prova
       if (form.getValues("username") === "testuser") {
         form.setValue("username", "");
         form.setValue("password", "");
-        form.setValue("costCenter", "");
       }
     }
   };
 
-  // Función para formatear el mensaje de error con saltos de línea
   const formatErrorMessage = (message: string) => {
-    return message.split('\n').map((line, index) => (
+    return message.split("\n").map((line, index) => (
       <span key={index} className="block">
         {line}
       </span>
@@ -136,7 +130,7 @@ const LoginForm = () => {
           </AlertDescription>
         </Alert>
       )}
-      
+
       <div className="space-y-1">
         <label htmlFor="username" className="block text-sm font-medium text-gray-800">
           Usuari
@@ -149,10 +143,12 @@ const LoginForm = () => {
           className="w-full px-3 py-2 bg-blue-50 border border-gray-300 rounded text-gray-900"
         />
         {form.formState.errors.username && (
-          <p className="text-sm text-red-600">{form.formState.errors.username.message}</p>
+          <p className="text-sm text-red-600">
+            {form.formState.errors.username.message}
+          </p>
         )}
       </div>
-      
+
       <div className="space-y-1">
         <label htmlFor="password" className="block text-sm font-medium text-gray-800">
           Contrasenya
@@ -165,26 +161,14 @@ const LoginForm = () => {
           className="w-full px-3 py-2 bg-blue-50 border border-gray-300 rounded text-gray-900"
         />
         {form.formState.errors.password && (
-          <p className="text-sm text-red-600">{form.formState.errors.password.message}</p>
+          <p className="text-sm text-red-600">
+            {form.formState.errors.password.message}
+          </p>
         )}
       </div>
-      
-      <div className="space-y-1">
-        <label htmlFor="costCenter" className="block text-sm font-medium text-gray-800">
-          Centre de Cost
-        </label>
-        <input
-          id="costCenter"
-          type="text"
-          {...form.register("costCenter")}
-          placeholder="Centre de cost"
-          className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-gray-900"
-        />
-        {form.formState.errors.costCenter && (
-          <p className="text-sm text-red-600">{form.formState.errors.costCenter.message}</p>
-        )}
-      </div>
-      
+
+      {/* Eliminamos el input de 'costCenter' por completo */}
+
       <button
         type="submit"
         disabled={isLoading}
@@ -192,15 +176,10 @@ const LoginForm = () => {
       >
         {isLoading ? "Autenticant..." : "Iniciar Sessió"}
       </button>
-      
+
       <div className="pt-1">
-        <AuthTypeSelector 
-          authType={authType} 
-          onAuthTypeChange={handleAuthTypeChange} 
-        />
+        <AuthTypeSelector authType={authType} onAuthTypeChange={handleAuthTypeChange} />
       </div>
     </form>
   );
-};
-
-export default LoginForm;
+}

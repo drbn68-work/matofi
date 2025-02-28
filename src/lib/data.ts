@@ -30,28 +30,24 @@ const parseCsvProducts = async (): Promise<Product[]> => {
     // Retornamos datos de ejemplo en caso de error
     return [
       {
-        id: "600560",
         codsap: "600560",
         codas400: "3288",
         descripcion: "ACEPT.DONACIO DE GAMETO Mod 3288",
         ubicacion: "FOTOCOPIA"
       },
       {
-        id: "600557",
         codsap: "600557",
         codas400: "3285",
         descripcion: "ACEPT.DONACIO EMBRIONS Mod 3285",
         ubicacion: "FOTOCOPIA"
       },
       {
-        id: "600508",
         codsap: "600508",
         codas400: "3215",
         descripcion: "ADQUISICIO FORA DE GUIA Mod 3215",
         ubicacion: "FOTOCOPIA"
       },
       {
-        id: "600339",
         codsap: "600339",
         codas400: "3022",
         descripcion: "ADQUISICION FUERA DE GUIA Mod 3022",

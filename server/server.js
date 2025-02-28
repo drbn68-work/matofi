@@ -1,16 +1,19 @@
 import express from 'express';
 import cors from 'cors';
-import authRoutes from './routes/authRoutes.js'; 
+import authRoutes from './routes/authRoutes.js';
+import excelRoutes from './routes/excelRoutes.js'; // <-- importar
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// Rutas de auth
 app.use('/api/auth', authRoutes);
+
+// Rutas para productos / categories del Excel
+app.use('/api', excelRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {

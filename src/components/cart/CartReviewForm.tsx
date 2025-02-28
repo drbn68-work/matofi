@@ -61,7 +61,7 @@ export const CartReviewForm = ({
           <h3 className="font-medium">Articles sol·licitats</h3>
           <div className="space-y-2">
             {items.map((item) => (
-              <div key={item.product.id} className="flex items-center justify-between py-2 border-b">
+              <div key={item.product.codsap} className="flex items-center justify-between py-2 border-b">
                 <div className="flex-1 min-w-0 pr-4">
                   <p className="font-medium truncate">{item.product.descripcion}</p>
                   <p className="text-xs text-gray-500">
@@ -74,7 +74,7 @@ export const CartReviewForm = ({
                       variant="outline"
                       size="icon"
                       className="h-6 w-6"
-                      onClick={() => onUpdateQuantity?.(item.product.id, item.quantity - 1)}
+                      onClick={() => onUpdateQuantity?.(item.product.codsap, item.quantity - 1)}
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
@@ -83,7 +83,7 @@ export const CartReviewForm = ({
                       variant="outline"
                       size="icon"
                       className="h-6 w-6"
-                      onClick={() => onUpdateQuantity?.(item.product.id, item.quantity + 1)}
+                      onClick={() => onUpdateQuantity?.(item.product.codsap, item.quantity + 1)}
                     >
                       <Plus className="h-3 w-3" />
                     </Button>
@@ -92,7 +92,7 @@ export const CartReviewForm = ({
                     variant="ghost"
                     size="sm"
                     className="text-red-500 hover:text-red-600 h-6 text-xs px-2"
-                    onClick={() => onRemove(item.product.id)}
+                    onClick={() => onRemove(item.product.codsap)}
                   >
                     Eliminar
                   </Button>

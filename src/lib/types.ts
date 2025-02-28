@@ -1,6 +1,5 @@
 
 export interface Product {
-  id: string;
   codsap: string;
   codas400: string;
   descripcion: string;
@@ -22,7 +21,6 @@ export interface CartItem {
 export interface LoginCredentials {
   username: string;
   password: string;
-  costCenter: string;
   authType: 'ldap' | 'local';
 }
 

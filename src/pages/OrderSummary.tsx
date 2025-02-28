@@ -110,7 +110,7 @@ const OrderSummary = () => {
               <h2 className="text-lg font-semibold mb-4">Articles Sol·licitats</h2>
               <div className="divide-y">
                 {state.items.map((item) => (
-                  <div key={item.product.id} className="py-4 flex items-start justify-between">
+                  <div key={item.product.codsap} className="py-4 flex items-start justify-between">
                     <div className="flex-1">
                       <p className="font-medium">{item.product.descripcion}</p>
                       <p className="text-sm text-gray-500">
