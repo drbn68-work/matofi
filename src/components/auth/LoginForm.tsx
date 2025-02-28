@@ -8,8 +8,18 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { loginWithLDAP } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import AuthTypeSelector from "./AuthTypeSelector";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { LoginCredentials } from "@/lib/types";
+import AuthTypeSelector from "./AuthTypeSelector";
 
 const formSchema = z.object({
   username: z.string().min(1, "Nom d'usuari requerit"),
@@ -56,13 +66,20 @@ const LoginForm = () => {
       if (response.success && response.user) {
         console.log("Autenticación exitosa:", response.user);
         
+        // Guardamos la información del usuario en localStorage
+        localStorage.setItem("user", JSON.stringify(response.user));
+        
         toast({
           title: "Inici de sessió exitós",
           description: `Benvingut, ${response.user.fullName}`,
         });
         
-        // Redirigimos a la página principal
-        navigate("/");
+        // Añadimos un pequeño retraso antes de navegar para asegurar 
+        // que el localStorage se actualice completamente
+        setTimeout(() => {
+          console.log("Redirigiendo a la página principal...");
+          navigate("/");
+        }, 100);
       } else {
         // Guardamos el mensaje de error para mostrarlo en el formulario
         console.error("Error de autenticación:", response.error);
@@ -119,80 +136,75 @@ const LoginForm = () => {
   };
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-      {errorMessage && (
-        <Alert variant="destructive" className="mb-4 border-red-500 bg-red-50">
-          <AlertTriangle className="h-4 w-4 text-red-500" />
-          <AlertTitle className="text-sm font-medium text-red-600">Error d'autenticació</AlertTitle>
-          <AlertDescription className="mt-2 text-xs text-red-600 max-h-60 overflow-y-auto">
-            {formatErrorMessage(errorMessage)}
-          </AlertDescription>
-        </Alert>
-      )}
-      
-      <div className="space-y-1">
-        <label htmlFor="username" className="block text-sm font-medium text-gray-800">
-          Usuari
-        </label>
-        <input
-          id="username"
-          type="text"
-          {...form.register("username")}
-          placeholder="usuari"
-          className="w-full px-3 py-2 bg-blue-50 border border-gray-300 rounded text-gray-900"
-        />
-        {form.formState.errors.username && (
-          <p className="text-sm text-red-600">{form.formState.errors.username.message}</p>
-        )}
-      </div>
-      
-      <div className="space-y-1">
-        <label htmlFor="password" className="block text-sm font-medium text-gray-800">
-          Contrasenya
-        </label>
-        <input
-          id="password"
-          type="password"
-          {...form.register("password")}
-          placeholder="••••••••"
-          className="w-full px-3 py-2 bg-blue-50 border border-gray-300 rounded text-gray-900"
-        />
-        {form.formState.errors.password && (
-          <p className="text-sm text-red-600">{form.formState.errors.password.message}</p>
-        )}
-      </div>
-      
-      <div className="space-y-1">
-        <label htmlFor="costCenter" className="block text-sm font-medium text-gray-800">
-          Centre de Cost
-        </label>
-        <input
-          id="costCenter"
-          type="text"
-          {...form.register("costCenter")}
-          placeholder="Centre de cost"
-          className="w-full px-3 py-2 bg-white border border-gray-300 rounded text-gray-900"
-        />
-        {form.formState.errors.costCenter && (
-          <p className="text-sm text-red-600">{form.formState.errors.costCenter.message}</p>
-        )}
-      </div>
-      
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full px-4 py-2 text-white bg-[#1a365d] hover:bg-[#162e4d] rounded-md transition-colors"
-      >
-        {isLoading ? "Autenticant..." : "Iniciar Sessió"}
-      </button>
-      
-      <div className="pt-1">
-        <AuthTypeSelector 
-          authType={authType} 
-          onAuthTypeChange={handleAuthTypeChange} 
-        />
-      </div>
-    </form>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <div className="space-y-4">
+          {errorMessage && (
+            <Alert variant="destructive" className="mb-4 border-red-500 bg-red-50">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <AlertTitle className="text-sm font-medium text-red-600">Error d'autenticació</AlertTitle>
+              <AlertDescription className="mt-2 text-xs text-red-600 max-h-60 overflow-y-auto">
+                {formatErrorMessage(errorMessage)}
+              </AlertDescription>
+            </Alert>
+          )}
+        
+          <FormField
+            control={form.control}
+            name="username"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Usuari</FormLabel>
+                <FormControl>
+                  <Input placeholder="usuari" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Contrasenya</FormLabel>
+                <FormControl>
+                  <Input type="password" placeholder="••••••••" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="costCenter"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Centre de Cost</FormLabel>
+                <FormControl>
+                  <Input placeholder="Centre de cost" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        <div className="flex flex-col space-y-4 mt-6">
+          <Button
+            type="submit"
+            className="w-full bg-blue-800 hover:bg-blue-900"
+            disabled={isLoading}
+          >
+            {isLoading ? "Autenticant..." : "Iniciar Sessió"}
+          </Button>
+          
+          <AuthTypeSelector 
+            authType={authType} 
+            onAuthTypeChange={handleAuthTypeChange} 
+          />
+        </div>
+      </form>
+    </Form>
   );
 };
 
