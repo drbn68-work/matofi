@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { LoginCredentials, LoginResponse, Product } from '@/lib/types';
 
@@ -9,7 +10,6 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Importante para enviar y recibir cookies
 });
 
 // Mock data para desarrollo
@@ -72,29 +72,15 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
     // Si es autenticación local (solo para admin/desarrollo)
     if (credentials.authType === 'local') {
       if (credentials.username === 'testuser' && credentials.password === 'testuser') {
-        try {
-          // Enviamos la autenticación al servidor para establecer la cookie
-          const response = await api.post('/auth/login-local', {
+        return {
+          success: true,
+          user: {
             username: credentials.username,
-            costCenter: credentials.costCenter
-          });
-          
-          return {
-            success: true,
-            user: response.data.user || {
-              username: credentials.username,
-              fullName: `Usuario de Prueba (${credentials.username})`,
-              costCenter: credentials.costCenter,
-              department: 'Departamento de Prueba'
-            }
-          };
-        } catch (error) {
-          console.error("Error al establecer cookie local:", error);
-          return {
-            success: false,
-            error: 'Error al establecer la sesión. Por favor, inténtelo de nuevo.'
-          };
-        }
+            fullName: `Usuario de Prueba (${credentials.username})`,
+            costCenter: credentials.costCenter,
+            department: 'Departamento de Prueba'
+          }
+        };
       } else {
         return {
           success: false,
@@ -202,17 +188,6 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
       success: false,
       error: detailedError
     };
-  }
-};
-
-// Función para cerrar sesión
-export const logout = async (): Promise<boolean> => {
-  try {
-    await api.post('/auth/logout');
-    return true;
-  } catch (error) {
-    console.error('Error al cerrar sesión:', error);
-    return false;
   }
 };
 

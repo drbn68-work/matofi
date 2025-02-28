@@ -4,7 +4,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
 import emailRoutes from './routes/emailRoutes.js';
 
@@ -17,16 +16,12 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:8080'], // Orígenes permitidos
-  credentials: true // Habilitar el envío de cookies
-}));
+app.use(cors());
 app.use(express.json());
-app.use(cookieParser()); // Middleware para cookies
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api', emailRoutes); 
+app.use('/api', emailRoutes); // Agregamos las rutas de email
 
 // Error handling
 app.use((err, req, res, next) => {
