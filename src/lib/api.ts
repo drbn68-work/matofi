@@ -18,22 +18,49 @@ const mockProducts: Product[] = [
   { id: "1", codsap: "600560", codas400: "3288", descripcion: "ACEPT.DONACIO DE GAMETO  Mod 3288", ubicacion: "FOTOCOPIA" },
   { id: "2", codsap: "600557", codas400: "3285", descripcion: "ACEPT.DONACIO PREEMBRIONES  Mod 3285", ubicacion: "FOTOCOPIA" },
   { id: "3", codsap: "600508", codas400: "3215", descripcion: "ADQUISICIO FORA DE GUIA  Mod 3215", ubicacion: "FOTOCOPIA" },
-  { id: "4", codsap: "600339", codas400: "3022", descripcion: "ADQUISICION FUERA DE GUIA  Mod 3022", ubicacion: "FOTOCOPIA" },
-  { id: "5", codsap: "600646", codas400: "3382", descripcion: "AGONISTAS PCO  Mod 3382", ubicacion: "FOTOCOPIA" },
   // ... resto de productos
 ];
 
 const mockCategories = [...new Set(mockProducts.map(p => p.ubicacion))];
 
+// Función para probar la conexión al backend
+export const testApiConnection = async (): Promise<boolean> => {
+  try {
+    const response = await api.get('/test');
+    console.log('Conexión al API exitosa:', response.data);
+    return true;
+  } catch (error) {
+    console.error('Error al conectar con el API:', error);
+    return false;
+  }
+};
+
 export const loginWithLDAP = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
+    console.log('Iniciando proceso de autenticación con:', { 
+      username: credentials.username, 
+      costCenter: credentials.costCenter,
+      authType: credentials.authType 
+    });
+
     // Si es autenticación local (solo para admin/desarrollo)
     if (credentials.authType === 'local') {
       if (credentials.username === 'testuser' && credentials.password === 'testuser') {
         try {
           console.log("Intentando autenticación local con credenciales de prueba");
           
+          // Intentamos primero probar la conexión
+          const isConnected = await testApiConnection();
+          if (!isConnected) {
+            console.error("No se pudo conectar con el servidor");
+            return {
+              success: false,
+              error: 'No se pudo conectar con el servidor. Verifique que el servidor esté en ejecución.'
+            };
+          }
+          
           // Enviamos la autenticación al servidor para establecer la cookie
+          console.log("Enviando solicitud de autenticación local a", `${API_BASE_URL}/auth/login-local`);
           const response = await api.post('/auth/login-local', {
             username: credentials.username,
             costCenter: credentials.costCenter
@@ -65,6 +92,12 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
           if (error.response) {
             console.error("Respuesta del servidor:", error.response.data);
             errorMessage = error.response.data?.error || errorMessage;
+          } else if (error.request) {
+            console.error("No se recibió respuesta del servidor");
+            errorMessage = 'No se recibió respuesta del servidor. Verifique que el servidor esté en ejecución.';
+          } else {
+            console.error("Error al configurar la solicitud:", error.message);
+            errorMessage = `Error al configurar la solicitud: ${error.message}`;
           }
           
           return {
@@ -81,13 +114,6 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
     }
     
     // Si es autenticación LDAP (predeterminada)
-    console.log('Intentando autenticación LDAP con:', { 
-      username: credentials.username, 
-      costCenter: credentials.costCenter,
-      // No mostramos la contraseña por seguridad
-      authType: credentials.authType 
-    });
-
     try {
       console.log(`Enviando solicitud a ${API_BASE_URL}/auth/login`);
       const response = await api.post('/auth/login', credentials);
@@ -96,27 +122,6 @@ export const loginWithLDAP = async (credentials: LoginCredentials): Promise<Logi
     } catch (error: any) {
       // Extraemos información detallada del error para debugging
       console.error('Error completo de autenticación LDAP:', error);
-      
-      // Crear un objeto con todos los detalles del error para depuración
-      const errorDetails = {
-        message: error.message,
-        name: error.name,
-        stack: error.stack,
-        code: error.code,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        headers: error.response?.headers,
-        data: error.response?.data,
-        config: {
-          url: error.config?.url,
-          method: error.config?.method,
-          headers: error.config?.headers,
-          timeout: error.config?.timeout,
-          baseURL: error.config?.baseURL
-        }
-      };
-      
-      console.error('Detalles completos del error:', JSON.stringify(errorDetails, null, 2));
       
       let errorMessage = 'Error de conexión con el servidor LDAP';
       let errorDetail = '';

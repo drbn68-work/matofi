@@ -8,14 +8,23 @@ import OrderSummary from "@/pages/OrderSummary";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-// Creamos una función para verificar la autenticación mediante cookies
+// Función para verificar la autenticación mediante cookies
 const checkAuth = async () => {
   try {
-    const response = await axios.get('http://localhost:3000/api/auth/check', { withCredentials: true });
+    // Primero intentar con cookie
+    const response = await axios.get('http://localhost:3000/api/auth/check', { 
+      withCredentials: true,
+      timeout: 3000 // Tiempo de espera reducido para evitar bloqueos
+    });
+    console.log("Verificación de autenticación por API:", response.data);
     return response.data.authenticated;
   } catch (error) {
-    console.error("Error al verificar autenticación:", error);
-    return false;
+    console.error("Error al verificar autenticación por API:", error);
+    
+    // Si falla, verificar si hay estado de autenticación en sessionStorage (modo desarrollo)
+    const isAuthenticatedInSession = sessionStorage.getItem('is_authenticated') === 'true';
+    console.log("Verificación de autenticación por sessionStorage:", isAuthenticatedInSession);
+    return isAuthenticatedInSession;
   }
 };
 
@@ -25,10 +34,16 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   
   useEffect(() => {
     const verifyAuth = async () => {
-      const authStatus = await checkAuth();
-      setIsAuthenticated(authStatus);
-      setIsLoading(false);
-      console.log("PrivateRoute - Estado de autenticación:", authStatus);
+      try {
+        const authStatus = await checkAuth();
+        console.log("PrivateRoute - Estado de autenticación:", authStatus);
+        setIsAuthenticated(authStatus);
+      } catch (error) {
+        console.error("Error en verificación de autenticación:", error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     verifyAuth();
@@ -54,25 +69,35 @@ function App() {
   
   useEffect(() => {
     const verifyAuth = async () => {
-      const authStatus = await checkAuth();
-      setIsAuthenticated(authStatus);
-      setIsLoading(false);
-      console.log("App - Estado de autenticación inicial:", authStatus);
+      try {
+        const authStatus = await checkAuth();
+        console.log("App - Estado de autenticación inicial:", authStatus);
+        setIsAuthenticated(authStatus);
+      } catch (error) {
+        console.error("Error en verificación inicial de autenticación:", error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     verifyAuth();
     
     // Verificar periódicamente pero con un intervalo más prolongado
     const interval = setInterval(async () => {
-      const authStatus = await checkAuth();
-      if (authStatus !== isAuthenticated) {
-        console.log("App - Actualización de estado de autenticación:", authStatus);
-        setIsAuthenticated(authStatus);
+      try {
+        const authStatus = await checkAuth();
+        if (authStatus !== isAuthenticated) {
+          console.log("App - Actualización de estado de autenticación:", authStatus);
+          setIsAuthenticated(authStatus);
+        }
+      } catch (error) {
+        console.error("Error en verificación periódica de autenticación:", error);
       }
     }, 30000); // Verificar cada 30 segundos
     
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
 
   // Mientras cargamos el estado de autenticación inicial, mostramos un indicador de carga
   if (isLoading) {
@@ -82,7 +107,6 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Redirigir la ruta raíz a /login si no está autenticado, o a / si lo está */}
         <Route 
           path="/" 
           element={
@@ -96,7 +120,6 @@ function App() {
           }
         />
 
-        {/* La ruta de login es pública pero redirige a / si ya está autenticado */}
         <Route 
           path="/login" 
           element={
@@ -108,7 +131,6 @@ function App() {
           } 
         />
 
-        {/* Rutas protegidas */}
         <Route
           path="/order-summary"
           element={
@@ -118,7 +140,6 @@ function App() {
           }
         />
 
-        {/* Ruta 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />

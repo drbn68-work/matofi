@@ -52,54 +52,79 @@ router.post('/login', async (req, res) => {
 
 // Ruta de login local (para desarrollo)
 router.post('/login-local', (req, res) => {
-  const { username, costCenter } = req.body;
-  
-  if (!username || !costCenter) {
-    return res.status(400).json({
+  try {
+    const { username, costCenter } = req.body;
+    
+    console.log("Recibida solicitud de login local:", { username, costCenter });
+    
+    if (!username || !costCenter) {
+      console.log("Error: Faltan datos necesarios para la autenticación local");
+      return res.status(400).json({
+        success: false,
+        error: 'Faltan datos necesarios para la autenticación local'
+      });
+    }
+    
+    // Crear usuario de prueba
+    const user = {
+      username,
+      fullName: `Usuario de Prueba (${username})`,
+      costCenter,
+      department: 'Departamento de Prueba',
+      email: `${username}@example.com`
+    };
+    
+    console.log("Estableciendo cookie auth_session para usuario:", user);
+    
+    // Almacenar datos del usuario en una cookie HTTP-only
+    res.cookie('auth_session', JSON.stringify(user), COOKIE_OPTIONS);
+    
+    console.log("Cookie establecida correctamente");
+    
+    return res.status(200).json({
+      success: true,
+      user
+    });
+  } catch (error) {
+    console.error("Error en login local:", error);
+    return res.status(500).json({
       success: false,
-      error: 'Faltan datos necesarios para la autenticación local'
+      error: `Error en el servidor: ${error.message || 'Error desconocido'}`
     });
   }
-  
-  // Crear usuario de prueba
-  const user = {
-    username,
-    fullName: `Usuario de Prueba (${username})`,
-    costCenter,
-    department: 'Departamento de Prueba',
-    email: `${username}@example.com`
-  };
-  
-  // Almacenar datos del usuario en una cookie HTTP-only
-  res.cookie('auth_session', JSON.stringify(user), COOKIE_OPTIONS);
-  
-  return res.status(200).json({
-    success: true,
-    user
-  });
 });
 
 // Ruta para verificar si el usuario está autenticado
 router.get('/check', (req, res) => {
-  const authCookie = req.cookies.auth_session;
-  
-  if (!authCookie) {
-    return res.status(200).json({
-      authenticated: false
-    });
-  }
-  
   try {
-    const user = JSON.parse(authCookie);
-    return res.status(200).json({
-      authenticated: true,
-      user
-    });
+    const authCookie = req.cookies.auth_session;
+    console.log("Verificando autenticación - Cookie recibida:", !!authCookie);
+    
+    if (!authCookie) {
+      return res.status(200).json({
+        authenticated: false
+      });
+    }
+    
+    try {
+      const user = JSON.parse(authCookie);
+      console.log("Usuario autenticado:", user.username);
+      return res.status(200).json({
+        authenticated: true,
+        user
+      });
+    } catch (error) {
+      console.error('Error al procesar cookie de autenticación:', error);
+      res.clearCookie('auth_session');
+      return res.status(200).json({
+        authenticated: false
+      });
+    }
   } catch (error) {
-    console.error('Error al procesar cookie de autenticación:', error);
-    res.clearCookie('auth_session');
-    return res.status(200).json({
-      authenticated: false
+    console.error("Error en verificación de autenticación:", error);
+    return res.status(500).json({
+      success: false,
+      error: `Error en el servidor: ${error.message || 'Error desconocido'}`
     });
   }
 });
