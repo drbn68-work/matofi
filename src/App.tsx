@@ -6,55 +6,21 @@ import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
 import OrderSummary from "@/pages/OrderSummary";
 import { useEffect, useState } from "react";
-import axios from "axios";
-
-// Función para verificar la autenticación mediante cookies
-const checkAuth = async () => {
-  try {
-    // Primero intentar con cookie
-    const response = await axios.get('http://localhost:3000/api/auth/check', { 
-      withCredentials: true,
-      timeout: 3000 // Tiempo de espera reducido para evitar bloqueos
-    });
-    console.log("Verificación de autenticación por API:", response.data);
-    return response.data.authenticated;
-  } catch (error) {
-    console.error("Error al verificar autenticación por API:", error);
-    
-    // Si falla, verificar si hay estado de autenticación en sessionStorage (modo desarrollo)
-    const isAuthenticatedInSession = sessionStorage.getItem('is_authenticated') === 'true';
-    console.log("Verificación de autenticación por sessionStorage:", isAuthenticatedInSession);
-    return isAuthenticatedInSession;
-  }
-};
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Forzar la re-evaluación del estado de autenticación
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
   useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        const authStatus = await checkAuth();
-        console.log("PrivateRoute - Estado de autenticación:", authStatus);
-        setIsAuthenticated(authStatus);
-      } catch (error) {
-        console.error("Error en verificación de autenticación:", error);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Verificar la autenticación cuando el componente se monta o actualiza
+    const user = localStorage.getItem("user");
+    setIsAuthenticated(!!user);
     
-    verifyAuth();
+    // Para debug
+    console.log("PrivateRoute - Estado de autenticación:", !!user);
   }, []);
 
-  // Mientras verificamos la autenticación, mostramos un indicador de carga
-  if (isLoading) {
-    return <div className="flex h-screen items-center justify-center">Cargando...</div>;
-  }
-  
-  if (isAuthenticated === false) {
+  if (!isAuthenticated) {
     console.log("PrivateRoute - Usuario no autenticado, redirigiendo a /login");
     return <Navigate to="/login" replace />;
   }
@@ -64,53 +30,49 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  // Verificar si el usuario está autenticado (para la ruta inicial)
+  const [user, setUser] = useState<string | null>(null);
   
   useEffect(() => {
-    const verifyAuth = async () => {
-      try {
-        const authStatus = await checkAuth();
-        console.log("App - Estado de autenticación inicial:", authStatus);
-        setIsAuthenticated(authStatus);
-      } catch (error) {
-        console.error("Error en verificación inicial de autenticación:", error);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
+    // Cargar el estado de usuario del localStorage cuando el componente se monta
+    const storedUser = localStorage.getItem("user");
+    setUser(storedUser);
+    
+    // Para debug
+    console.log("App - Usuario en localStorage:", !!storedUser);
+    
+    // Configuramos un evento para detectar cambios en el localStorage
+    const handleStorageChange = () => {
+      const updatedUser = localStorage.getItem("user");
+      console.log("App - Cambio detectado en localStorage:", !!updatedUser);
+      setUser(updatedUser);
     };
     
-    verifyAuth();
+    window.addEventListener("storage", handleStorageChange);
     
-    // Verificar periódicamente pero con un intervalo más prolongado
-    const interval = setInterval(async () => {
-      try {
-        const authStatus = await checkAuth();
-        if (authStatus !== isAuthenticated) {
-          console.log("App - Actualización de estado de autenticación:", authStatus);
-          setIsAuthenticated(authStatus);
-        }
-      } catch (error) {
-        console.error("Error en verificación periódica de autenticación:", error);
+    // También verificamos periódicamente el localStorage
+    const interval = setInterval(() => {
+      const currentUser = localStorage.getItem("user");
+      if (currentUser !== user) {
+        console.log("App - Actualización de usuario detectada:", !!currentUser);
+        setUser(currentUser);
       }
-    }, 30000); // Verificar cada 30 segundos
+    }, 1000);
     
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
-
-  // Mientras cargamos el estado de autenticación inicial, mostramos un indicador de carga
-  if (isLoading) {
-    return <div className="flex h-screen items-center justify-center">Cargando...</div>;
-  }
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
 
   return (
     <Router>
       <Routes>
+        {/* Redirigir la ruta raíz a /login si no está autenticado, o a / si lo está */}
         <Route 
           path="/" 
           element={
-            isAuthenticated ? (
+            user ? (
               <PrivateRoute>
                 <Index />
               </PrivateRoute>
@@ -120,10 +82,11 @@ function App() {
           }
         />
 
+        {/* La ruta de login es pública pero redirige a / si ya está autenticado */}
         <Route 
           path="/login" 
           element={
-            isAuthenticated ? (
+            user ? (
               <Navigate to="/" replace />
             ) : (
               <Login />
@@ -131,6 +94,7 @@ function App() {
           } 
         />
 
+        {/* Rutas protegidas */}
         <Route
           path="/order-summary"
           element={
@@ -140,6 +104,7 @@ function App() {
           }
         />
 
+        {/* Ruta 404 */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />

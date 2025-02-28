@@ -1,4 +1,3 @@
-
 import ldap from 'ldapjs';
 import config from '../config/ldapConfig.js';
 
@@ -119,37 +118,4 @@ class LDAPService {
   }
 }
 
-// Función que será exportada para la autenticación de usuarios
-export const authenticateUser = async (username, password, costCenter) => {
-  try {
-    // Instancia del servicio LDAP
-    const ldapService = new LDAPService();
-    
-    // Autenticar con LDAP
-    const authResult = await ldapService.authenticate(username, password);
-    
-    // Si la autenticación es exitosa, agregar el centro de coste al usuario
-    if (authResult.success) {
-      return {
-        success: true,
-        user: {
-          ...authResult.user,
-          costCenter: costCenter,
-          department: 'Departamento asignado', // Esto se podría obtener del LDAP o de una base de datos
-          email: `${username}@fp.local` // Ejemplo de correo electrónico generado
-        }
-      };
-    }
-    
-    return authResult;
-  } catch (error) {
-    console.error('Error en autenticación LDAP:', error);
-    return {
-      success: false,
-      error: error.message || 'Error de autenticación en el servidor LDAP'
-    };
-  }
-};
-
-// Exportar tanto el servicio como la función de autenticación
 export default new LDAPService();
