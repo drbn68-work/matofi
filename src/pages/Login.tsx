@@ -1,6 +1,5 @@
 
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import LoginHeader from "@/components/auth/LoginHeader";
+import { LoginHeader } from "@/components/auth/LoginHeader";
 import LoginForm from "@/components/auth/LoginForm";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -19,12 +18,10 @@ const Login = () => {
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-50">
-      <Card className="w-[350px]">
+      <div className="w-[450px] p-6 bg-white rounded shadow-sm">
         <LoginHeader />
-        <CardContent>
-          <LoginForm />
-        </CardContent>
-      </Card>
+        <LoginForm />
+      </div>
     </div>
   );
 };
