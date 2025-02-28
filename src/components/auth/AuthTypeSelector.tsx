@@ -8,7 +8,7 @@ interface AuthTypeSelectorProps {
 
 const AuthTypeSelector = ({ authType, onAuthTypeChange }: AuthTypeSelectorProps) => {
   return (
-    <div className="flex justify-center space-x-8 w-full pt-2">
+    <div className="flex justify-center space-x-8 w-full">
       <div 
         className="flex items-center space-x-2 cursor-pointer" 
         onClick={() => onAuthTypeChange("ldap")}
@@ -20,7 +20,7 @@ const AuthTypeSelector = ({ authType, onAuthTypeChange }: AuthTypeSelectorProps)
         }`}>
           {authType === "ldap" && <Check className="h-4 w-4 text-white" />}
         </div>
-        <span className="text-sm">LDAP</span>
+        <span className="text-sm text-gray-700">LDAP</span>
       </div>
       
       <div 
@@ -34,7 +34,7 @@ const AuthTypeSelector = ({ authType, onAuthTypeChange }: AuthTypeSelectorProps)
         }`}>
           {authType === "local" && <Check className="h-4 w-4 text-white" />}
         </div>
-        <span className="text-sm">Local</span>
+        <span className="text-sm text-gray-700">Local</span>
       </div>
     </div>
   );
