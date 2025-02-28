@@ -50,7 +50,7 @@ const LoginForm = () => {
     };
     
     try {
-      console.log("Iniciando proceso de autenticación...");
+      console.log("Iniciando proceso de autenticación...", loginData);
       const response = await loginWithLDAP(loginData);
       
       if (response.success && response.user) {
