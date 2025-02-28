@@ -1,3 +1,4 @@
+
 import { Product } from "./types";
 import Papa from 'papaparse';
 
@@ -16,7 +17,9 @@ const parseCsvProducts = async (): Promise<Product[]> => {
             codas400: row.codas400,
             descripcion: row.descripcion,
             ubicacion: row.ubicacion
-          }));
+          })).filter((product: any) => product.codsap && product.descripcion); // Filtramos productos inválidos
+          
+          console.log(`CSV cargado: ${products.length} productos encontrados`);
           resolve(products as Product[]);
         },
         error: (error) => {
@@ -40,7 +43,7 @@ const parseCsvProducts = async (): Promise<Product[]> => {
         id: "600557",
         codsap: "600557",
         codas400: "3285",
-        descripcion: "ACEPT.DONACIO EMBRIONS Mod 3285",
+        descripcion: "ACEPT.DONACIO PREEMBRIONES Mod 3285",
         ubicacion: "FOTOCOPIA"
       },
       {
@@ -55,6 +58,13 @@ const parseCsvProducts = async (): Promise<Product[]> => {
         codsap: "600339",
         codas400: "3022",
         descripcion: "ADQUISICION FUERA DE GUIA Mod 3022",
+        ubicacion: "FOTOCOPIA"
+      },
+      {
+        id: "600646",
+        codsap: "600646",
+        codas400: "3382",
+        descripcion: "AGONISTAS PCO Mod 3382",
         ubicacion: "FOTOCOPIA"
       }
     ];
@@ -72,5 +82,9 @@ export const getProducts = async (): Promise<Product[]> => {
   return await parseCsvProducts();
 };
 
-// Mantenemos una versión inicial de las categorías
-export const categories = ["FOTOCOPIA", "MP-22", "MP-52", "MP-07", "MP-10"];
+// Lista de categorías conocidas (como respaldo)
+export const categories = [
+  "FOTOCOPIA", "MO-42", "MP-12", "MP-22", "MP-52", 
+  "MP-07", "MP-10", "MP-26", "MP-29", "MP-51", 
+  "MP-28", "MP-27", "MP-25", "MP-43", "MP-53"
+];
