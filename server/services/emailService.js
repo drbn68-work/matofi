@@ -1,16 +1,31 @@
 
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Configuración para cargar el archivo .env desde la carpeta server
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
+// Obtener configuración SMTP desde variables de entorno
+const SMTP_HOST = process.env.SMTP_HOST || 'localhost';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '25', 10);
 
 // Configuración del transportador de email usando el servidor SMTP proporcionado
 const transporter = nodemailer.createTransport({
-  host: 'azureconnect.fp.local',
-  port: 25,
+  host: SMTP_HOST,
+  port: SMTP_PORT,
   secure: false, // true para 465, false para otros puertos
   tls: {
     // No rechazar conexiones no autorizadas
     rejectUnauthorized: false
   }
 });
+
+// Verificar la configuración al iniciar la aplicación
+console.log(`Configuración SMTP: Host=${SMTP_HOST}, Port=${SMTP_PORT}`);
 
 /**
  * Función para enviar un correo electrónico con los detalles de un pedido
