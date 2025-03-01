@@ -30,7 +30,7 @@ const worksheet = workbook.Sheets[sheetName];
 const allData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
 // 3) Definir el nombre de la columna de categorías en el Excel
-const categoryColumnName = "categoria"; 
+const categoryColumnName = "categoria";
 
 // 4) Endpoint para obtener categorías únicas
 router.get('/categories', (req, res) => {
@@ -38,23 +38,15 @@ router.get('/categories', (req, res) => {
         if (!allData.length) {
             return res.status(500).json({ error: "No hay datos en el archivo." });
         }
-
-        // Encontrar la columna de categorías en la cabecera (fila 0)
         const headers = allData[0];
         const categoryIndex = headers.indexOf(categoryColumnName);
-
         if (categoryIndex === -1) {
             return res.status(400).json({ error: `Columna "${categoryColumnName}" no encontrada.` });
         }
-
-        // Extraer categorías desde la segunda fila (slice(1))
         const categories = allData.slice(1)
             .map(row => row[categoryIndex])
-            .filter(Boolean); // Eliminar valores vacíos
-
-        // Quitar duplicados
+            .filter(Boolean);
         const uniqueCategories = [...new Set(categories)];
-
         res.json(uniqueCategories);
     } catch (error) {
         console.error("Error obteniendo categorías:", error);
@@ -62,40 +54,50 @@ router.get('/categories', (req, res) => {
     }
 });
 
-// 5) Endpoint para obtener productos con paginación
+// 5) Endpoint para obtener productos con paginación y búsqueda
 router.get('/products', (req, res) => {
-    const page = parseInt(req.query.page) || 1;
-    const pageSize = parseInt(req.query.pageSize) || 10;
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const search = (req.query.search || "").toLowerCase().trim();
+        const category = req.query.category || "";
 
-    // Índices para extraer la porción de datos
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
+        // Obtener cabeceras y mapear las filas sin la cabecera
+        const headers = allData[0];
+        const dataWithoutHeaders = allData.slice(1).map(row => mapRowToObject(row, headers));
 
-    // Extraer las filas de productos para esta página
-    const pageData = allData.slice(startIndex, endIndex);
+        // Filtrado por búsqueda en la columna "descripcion"
+        let filtered = dataWithoutHeaders;
+        if (search) {
+            filtered = filtered.filter(item => {
+                const desc = (item.descripcion || "").toLowerCase();
+                return desc.includes(search);
+            });
+        }
 
-    // Cabeceras del Excel
-    const headers = allData[0] || [];
-    let items = [];
+        // Filtrado por categoría si se especifica y no es "Tots" (o vacío)
+        if (category && category !== "Tots") {
+            filtered = filtered.filter(item => item.categoria === category);
+        }
 
-    if (page === 1) {
-        // Evita volver a incluir la fila de cabeceras
-        items = pageData.slice(1).map(row => mapRowToObject(row, headers));
-    } else {
-        items = pageData.map(row => mapRowToObject(row, headers));
+        // Paginación sobre el conjunto filtrado
+        const totalRows = filtered.length;
+        const totalPages = Math.ceil(totalRows / pageSize);
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageData = filtered.slice(startIndex, endIndex);
+
+        res.json({
+            page,
+            pageSize,
+            totalRows,
+            totalPages,
+            items: pageData
+        });
+    } catch (error) {
+        console.error("Error al obtener productos:", error);
+        res.status(500).json({ error: "Error interno del servidor" });
     }
-
-    // Total de páginas (restamos 1 por la fila de cabeceras)
-    const totalRows = allData.length - 1;
-    const totalPages = Math.ceil(totalRows / pageSize);
-
-    res.json({
-        page,
-        pageSize,
-        totalRows,
-        totalPages,
-        items
-    });
 });
 
 // 6) Función para mapear una fila de celdas a un objeto con claves de cabecera

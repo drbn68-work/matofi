@@ -1,4 +1,3 @@
-
 import { User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
@@ -15,6 +14,9 @@ interface HeaderProps {
   onRemoveFromCart: (productId: string) => void;
   onCheckout: () => void;
   onUpdateCartQuantity: (productId: string, quantity: number) => void;
+
+  // Añadimos esta prop para resetear o cambiar la categoría
+  onCategorySelect: (category: string | null) => void;
 }
 
 export const Header = ({
@@ -25,8 +27,18 @@ export const Header = ({
   cartItems,
   onRemoveFromCart,
   onCheckout,
-  onUpdateCartQuantity
+  onUpdateCartQuantity,
+  onCategorySelect,
 }: HeaderProps) => {
+  // Manejador local para cambios en la barra de búsqueda
+  const handleSearchChange = (value: string) => {
+    onSearchChange(value);
+    // Cada vez que cambie la búsqueda, reseteamos la categoría
+    onCategorySelect(null); 
+    // O si prefieres "Tots":
+    // onCategorySelect("Tots");
+  };
+
   return (
     <header className="fixed top-0 z-10 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container flex items-center justify-between py-4">
@@ -44,11 +56,13 @@ export const Header = ({
             </div>
           )}
         </div>
+
         <h1 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-primary">
           Material d'Oficina
         </h1>
+
         <div className="flex items-center gap-4">
-          <SearchBar value={searchValue} onChange={onSearchChange} />
+          <SearchBar value={searchValue} onChange={handleSearchChange} />
           <CartPreview
             items={cartItems}
             onRemove={onRemoveFromCart}
