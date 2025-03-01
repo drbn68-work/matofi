@@ -1,4 +1,3 @@
-
 import React from "react";
 import { CartReviewFormProps } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,8 @@ export const CartReviewForm = ({
   onSubmit,
   onDeliveryLocationChange,
   onCommentsChange,
-  onUpdateQuantity
+  onUpdateQuantity,
+  onCostCenterChange // Nuevo prop para cambiar el centre de cost
 }: CartReviewFormProps) => {
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col">
@@ -25,7 +25,19 @@ export const CartReviewForm = ({
           <h3 className="font-medium mb-2">Informació de l'usuari</h3>
           <p>{userInfo.fullName}</p>
           <p className="text-sm text-gray-500">{userInfo.department}</p>
-          <p className="text-sm text-gray-500">Centre de cost: {userInfo.costCenter}</p>
+          <div className="space-y-2">
+            <label htmlFor="costCenter" className="text-sm font-medium">
+              Centre de cost *
+            </label>
+            <Input
+              id="costCenter"
+              type="number"
+              value={userInfo.costCenter || ""}
+              onChange={(e) => onCostCenterChange(e.target.value)}
+              placeholder="Introdueix el centre de cost"
+              required
+            />
+          </div>
           <p className="text-sm text-gray-500">{userInfo.email}</p>
         </div>
 
