@@ -4,6 +4,7 @@ export interface Product {
   codas400: string;
   descripcion: string;
   ubicacion: string;
+  categoria: string;
 }
 
 export interface User {

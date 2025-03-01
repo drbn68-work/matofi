@@ -1,93 +1,110 @@
-import express from 'express';
-import XLSX from 'xlsx';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// Estas dos líneas son para poder usar __dirname con ES Modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import express from 'express';
+import XLSX from 'xlsx';
 
 const router = express.Router();
 
-// 1. Leer el archivo de Excel al iniciar la app o la ruta
-// (Hazlo fuera de la ruta, para que se cargue solo una vez)
-const workbook = XLSX.readFile(path.join(__dirname, '..', '..', 'public', 'catalogomatofi.xlsx'));
+/**
+ * En ESM (con "type": "module"), __dirname no está disponible por defecto.
+ * Usamos fileURLToPath y path.dirname para obtenerlo.
+ */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-// 2. Escoger la hoja que quieras (por defecto, la primera)
+/**
+ * Construye la ruta absoluta hacia el archivo Excel:
+ * - Subimos dos niveles (../../) desde server/routes hasta la carpeta raíz (matofi),
+ * - Entramos en /public
+ * - Nombre del archivo: catalogomatofi.xlsx
+ */
+const excelPath = path.join(__dirname, '../../public/catalogomatofi.xlsx');
+console.log("Intentando cargar el Excel desde:", excelPath);
+
+// 1) Cargar el archivo Excel y procesar los datos
+const workbook = XLSX.readFile(excelPath);
 const sheetName = workbook.SheetNames[0];
 const worksheet = workbook.Sheets[sheetName];
 
-// 3. Convertir la hoja a un array de arrays (o array de objetos con cabecera)
+// 2) Convertir la hoja a un array de arrays (o array de objetos con cabecera)
 const allData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-/*
-  Esto te devuelve algo como:
-  [
-    ["CodSAP", "Descripcion", "Ubicacion", ... ],
-    ["600560", "ACEPT...", "FOTOCOPIA", ... ],
-    ...
-  ]
-  Cada sub-array es una fila.
-*/
 
-// Creamos un endpoint GET /api/products que soporte ?page=1&pageSize=10
-router.get('/products', (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 10;
+// 3) Definir el nombre de la columna de categorías en el Excel
+const categoryColumnName = "categoria"; 
 
-  // Calculamos los índices para hacer slice
-  const startIndex = (page - 1) * pageSize;
-  const endIndex = startIndex + pageSize;
+// 4) Endpoint para obtener categorías únicas
+router.get('/categories', (req, res) => {
+    try {
+        if (!allData.length) {
+            return res.status(500).json({ error: "No hay datos en el archivo." });
+        }
 
-  // Extraemos la porción de filas para esa página
-  const pageData = allData.slice(startIndex, endIndex);
+        // Encontrar la columna de categorías en la cabecera (fila 0)
+        const headers = allData[0];
+        const categoryIndex = headers.indexOf(categoryColumnName);
 
-  // Si la primera fila del Excel son cabeceras, 
-  //   puedes ignorar esa fila en el slice, o quitarla antes de almacenar 'allData'.
-  //   Para este ejemplo, supongamos que la primera fila es cabecera y la devuelves también, o la quitas si quieres.
+        if (categoryIndex === -1) {
+            return res.status(400).json({ error: `Columna "${categoryColumnName}" no encontrada.` });
+        }
 
-  // Convertir cada fila (array) en un objeto con campos “codsap”, “descripcion”, etc.
-  //   asumiendo que la fila 0 tiene cabeceras
-  //   si no tienes cabeceras, lo harías de otra forma.
-  const headers = allData[0] || []; // la cabecera supuestamente
-  let items = [];
-  // Evitar que el slice devuelva la primera fila otra vez. 
-  //   Puedes manejarlo de varias maneras. Ejemplo rápido:
-  if (page === 1) {
-    // pageData[0] sería la cabecera, la saltamos
-    items = pageData.slice(1).map(row => mapRowToObject(row, headers));
-  } else {
-    // de la segunda página en adelante, mapear todo
-    items = pageData.map(row => mapRowToObject(row, headers));
-  }
+        // Extraer categorías desde la segunda fila (slice(1))
+        const categories = allData.slice(1)
+            .map(row => row[categoryIndex])
+            .filter(Boolean); // Eliminar valores vacíos
 
-  // En caso de no tener cabeceras en la primera fila
-  // items = pageData.map((rowArray) => ({
-  //   codsap: rowArray[0],
-  //   descripcion: rowArray[1],
-  //   ubicacion: rowArray[2],
-  //   // ...
-  // }));
+        // Quitar duplicados
+        const uniqueCategories = [...new Set(categories)];
 
-  // Estructura de la respuesta
-  const totalRows = allData.length;
-  const totalPages = Math.ceil(totalRows / pageSize);
-
-  res.json({
-    page,
-    pageSize,
-    totalRows,
-    totalPages,
-    items
-  });
+        res.json(uniqueCategories);
+    } catch (error) {
+        console.error("Error obteniendo categorías:", error);
+        res.status(500).json({ error: "Error interno del servidor." });
+    }
 });
 
-// Función auxiliar para mapear un array de celdas en un objeto con nombres de columna
+// 5) Endpoint para obtener productos con paginación
+router.get('/products', (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+
+    // Índices para extraer la porción de datos
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    // Extraer las filas de productos para esta página
+    const pageData = allData.slice(startIndex, endIndex);
+
+    // Cabeceras del Excel
+    const headers = allData[0] || [];
+    let items = [];
+
+    if (page === 1) {
+        // Evita volver a incluir la fila de cabeceras
+        items = pageData.slice(1).map(row => mapRowToObject(row, headers));
+    } else {
+        items = pageData.map(row => mapRowToObject(row, headers));
+    }
+
+    // Total de páginas (restamos 1 por la fila de cabeceras)
+    const totalRows = allData.length - 1;
+    const totalPages = Math.ceil(totalRows / pageSize);
+
+    res.json({
+        page,
+        pageSize,
+        totalRows,
+        totalPages,
+        items
+    });
+});
+
+// 6) Función para mapear una fila de celdas a un objeto con claves de cabecera
 function mapRowToObject(rowArray, headers) {
-  const obj = {};
-  headers.forEach((headerName, index) => {
-    obj[headerName] = rowArray[index];
-  });
-  return obj;
+    const obj = {};
+    headers.forEach((headerName, index) => {
+        obj[headerName] = rowArray[index];
+    });
+    return obj;
 }
 
 export default router;

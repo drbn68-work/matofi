@@ -15,7 +15,8 @@ const parseCsvProducts = async (): Promise<Product[]> => {
             codsap: row.codsap,
             codas400: row.codas400,
             descripcion: row.descripcion,
-            ubicacion: row.ubicacion
+            ubicacion: row.ubicacion,
+            categoria: row.categoria
           }));
           resolve(products as Product[]);
         },
@@ -33,25 +34,29 @@ const parseCsvProducts = async (): Promise<Product[]> => {
         codsap: "600560",
         codas400: "3288",
         descripcion: "ACEPT.DONACIO DE GAMETO Mod 3288",
-        ubicacion: "FOTOCOPIA"
+        ubicacion: "FOTOCOPIA",
+        categoria: "DOCUMENTS"
       },
       {
         codsap: "600557",
         codas400: "3285",
         descripcion: "ACEPT.DONACIO EMBRIONS Mod 3285",
-        ubicacion: "FOTOCOPIA"
+        ubicacion: "FOTOCOPIA",
+        categoria: "DOCUMENTS"
       },
       {
         codsap: "600508",
         codas400: "3215",
         descripcion: "ADQUISICIO FORA DE GUIA Mod 3215",
-        ubicacion: "FOTOCOPIA"
+        ubicacion: "FOTOCOPIA",
+        categoria: "DOCUMENTS"
       },
       {
         codsap: "600339",
         codas400: "3022",
         descripcion: "ADQUISICION FUERA DE GUIA Mod 3022",
-        ubicacion: "FOTOCOPIA"
+        ubicacion: "FOTOCOPIA",
+        categoria: "DOCUMENTS"
       }
     ];
   }
@@ -59,7 +64,7 @@ const parseCsvProducts = async (): Promise<Product[]> => {
 
 // Extraemos las categorías únicas del CSV
 export const getCategories = (products: Product[]): string[] => {
-  const uniqueCategories = new Set(products.map(product => product.ubicacion));
+  const uniqueCategories = new Set(products.map(product => product.categoria));
   return Array.from(uniqueCategories);
 };
 

@@ -89,7 +89,7 @@ export default function Index({ user }: IndexProps) {
   const filteredProducts = products.filter((product) => {
     if (!product.descripcion) return false;
     const matchesSearch = product.descripcion.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = !selectedCategory || product.ubicacion === selectedCategory;
+    const matchesCategory = !selectedCategory || product.categoria === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
