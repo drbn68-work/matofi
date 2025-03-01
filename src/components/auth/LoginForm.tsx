@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from "react"; 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -51,6 +51,30 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
     };
 
     try {
+      // Si se ha seleccionado el modo local, verificamos las credenciales de prueba
+      if (authType === "local") {
+        if (data.username === "testuser" && data.password === "testuser") {
+          // Creamos un usuario simulado para pruebas
+          const fakeUser = { username: "testuser", fullName: "Test User" };
+          toast({
+            title: "Inici de sessió exitós",
+            description: `Benvingut, ${fakeUser.fullName}`,
+          });
+          onLoginSuccess(fakeUser);
+        } else {
+          const errorMsg = "Credenciales inválidas para el modo local.";
+          setErrorMessage(errorMsg);
+          onError(errorMsg);
+          toast({
+            variant: "destructive",
+            title: "Error d'autenticació",
+            description: errorMsg,
+          });
+        }
+        return setIsLoading(false);
+      }
+
+      // Si el modo es LDAP, seguimos el flujo habitual
       console.log("Iniciando proceso de autenticación...");
       const response = await loginWithLDAP(loginData);
 
@@ -102,7 +126,6 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
     if (type === "local") {
       form.setValue("username", "testuser");
       form.setValue("password", "testuser");
-      // Se elimina costCenter, así que ya no rellenamos nada
     } else {
       if (form.getValues("username") === "testuser") {
         form.setValue("username", "");
@@ -166,8 +189,6 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
           </p>
         )}
       </div>
-
-      {/* Eliminamos el input de 'costCenter' por completo */}
 
       <button
         type="submit"
