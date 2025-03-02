@@ -1,4 +1,4 @@
-
+import React, { useState, useEffect } from "react";
 import { CartItem } from "@/lib/types";
 import {
   Sheet,
@@ -7,7 +7,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CartCounter } from "./cart/CartCounter";
 import { CartOrderConfirmation } from "./cart/CartOrderConfirmation";
@@ -17,30 +16,76 @@ import { useNavigate } from "react-router-dom";
 
 interface CartPreviewProps {
   items: CartItem[];
+  userInfo: UserInfo; // Información del usuario proveniente del LDAP (sin costCenter, o con costCenter vacío)
   onRemove: (productId: string) => void;
   onCheckout: () => void;
   onUpdateQuantity: (productId: string, quantity: number) => void;
 }
 
-export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: CartPreviewProps) => {
+export const CartPreview = ({
+  items,
+  userInfo,
+  onRemove,
+  onCheckout,
+  onUpdateQuantity,
+}: CartPreviewProps) => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // 1) Estados para los campos a persistir
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [comments, setComments] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedItems, setSubmittedItems] = useState<CartItem[]>([]);
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
-  const totalItems = isSubmitted 
+  // 2) Estado local para userInfo, con costCenter inicial vacío
+  const [localUserInfo, setLocalUserInfo] = useState<UserInfo>({
+    ...userInfo,
+    costCenter: "",
+  });
+
+  // 3) Al montar, recuperar costCenter, deliveryLocation y comments desde sessionStorage
+  useEffect(() => {
+    const storedCostCenter = sessionStorage.getItem("costCenter");
+    if (storedCostCenter) {
+      setLocalUserInfo((prev) => ({ ...prev, costCenter: storedCostCenter }));
+    }
+
+    const storedDelivery = sessionStorage.getItem("deliveryLocation");
+    if (storedDelivery) {
+      setDeliveryLocation(storedDelivery);
+    }
+
+    const storedComments = sessionStorage.getItem("comments");
+    if (storedComments) {
+      setComments(storedComments);
+    }
+  }, []);
+
+  // 4) Guardar en sessionStorage cada vez que cambien
+  useEffect(() => {
+    sessionStorage.setItem("costCenter", localUserInfo.costCenter);
+  }, [localUserInfo.costCenter]);
+
+  useEffect(() => {
+    sessionStorage.setItem("deliveryLocation", deliveryLocation);
+  }, [deliveryLocation]);
+
+  useEffect(() => {
+    sessionStorage.setItem("comments", comments);
+  }, [comments]);
+
+  // Función para actualizar costCenter
+  const handleCostCenterChange = (value: string) => {
+    setLocalUserInfo((prev) => ({ ...prev, costCenter: value }));
+  };
+
+  // Cálculo de ítems totales
+  const totalItems = isSubmitted
     ? submittedItems.reduce((acc, item) => acc + item.quantity, 0)
     : items.reduce((acc, item) => acc + item.quantity, 0);
 
-  const userInfo: UserInfo = {
-    fullName: "David Robson",
-    department: "Servei d'Informàtica",
-    costCenter: "5220",
-    email: "drobson@fundacio-puigvert.es"
-  };
-
+  // Confirmar solicitud y navegar a OrderSummary
   const handleSubmit = () => {
     if (!deliveryLocation.trim()) {
       toast({
@@ -54,24 +99,23 @@ export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: C
     setSubmittedItems([...items]);
     setIsSubmitted(true);
     onCheckout();
-    
-    // Navegar a la página de resumen con los datos necesarios
+
     navigate("/order-summary", {
       state: {
         items,
-        userInfo,
+        userInfo: localUserInfo,
         deliveryLocation,
-        comments
-      }
+        comments,
+      },
     });
   };
 
-  // Función para manejar el cierre de la confirmación del pedido
+  // Función para cerrar la confirmación del pedido
   const handleClose = () => {
     setIsSubmitted(false);
   };
 
-  // Generamos un número de pedido único
+  // Generar un número de pedido único
   const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
 
   return (
@@ -81,7 +125,9 @@ export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: C
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>
-          <SheetTitle>Sol·licitud de Material ({totalItems} articles)</SheetTitle>
+          <SheetTitle>
+            Sol·licitud de Material ({totalItems} articles)
+          </SheetTitle>
         </SheetHeader>
 
         {isSubmitted ? (
@@ -89,14 +135,14 @@ export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: C
             onClose={handleClose}
             orderNumber={orderNumber}
             items={submittedItems}
-            userInfo={userInfo}
+            userInfo={localUserInfo}
             deliveryLocation={deliveryLocation}
             comments={comments}
           />
         ) : (
           <CartReviewForm
             items={items}
-            userInfo={userInfo}
+            userInfo={localUserInfo}
             deliveryLocation={deliveryLocation}
             comments={comments}
             onRemove={onRemove}
@@ -104,6 +150,7 @@ export const CartPreview = ({ items, onRemove, onCheckout, onUpdateQuantity }: C
             onDeliveryLocationChange={setDeliveryLocation}
             onCommentsChange={setComments}
             onUpdateQuantity={onUpdateQuantity}
+            onCostCenterChange={handleCostCenterChange}
           />
         )}
       </SheetContent>

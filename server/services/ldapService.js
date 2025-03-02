@@ -16,6 +16,12 @@ class LDAPService {
 
   async authenticate(username, password) {
     return new Promise((resolve, reject) => {
+      // Log de depuración: mostrar el DN y la contraseña de bind
+      console.log("Intentando bind con:", {
+        bindDN: config.bindDN,
+        bindCredentials: config.bindCredentials
+      });
+  
       // Bind inicial con FP\matofi_bind
       this.client.bind(config.bindDN, config.bindCredentials, (bindErr) => {
         if (bindErr) {
@@ -24,11 +30,11 @@ class LDAPService {
         }
         console.log("✅ Bind inicial exitoso con", config.bindDN);
 
-        // Búsqueda por sAMAccountName
+        // Búsqueda por sAMAccountName, solicitando atributos adicionales
         const searchOptions = {
           scope: 'sub',
           filter: `(sAMAccountName=${username})`,
-          attributes: ['dn', 'cn', 'sAMAccountName']
+          attributes: ['dn', 'cn', 'sAMAccountName', 'mail', 'department']
         };
 
         this.client.search(config.baseDN, searchOptions, (searchErr, res) => {
@@ -90,12 +96,15 @@ class LDAPService {
               }
 
               console.log("🔓 Autenticación exitosa para", username);
+              // Devuelve el objeto de usuario, dejando costCenter vacío
               resolve({
                 success: true,
                 user: {
-                  // Usamos las claves en minúsculas que hemos definido en el objeto reconstruido
-                  username: entryData.samaccountname, 
-                  fullName: entryData.cn
+                  username: entryData.samaccountname,
+                  fullName: entryData.cn,
+                  department: entryData.department || "",
+                  email: entryData.mail || "",
+                  costCenter: ""  // Se deja vacío para que el usuario lo complete posteriormente
                 }
               });
             });

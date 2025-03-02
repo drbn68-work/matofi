@@ -65,6 +65,7 @@ export const Header = ({
           <SearchBar value={searchValue} onChange={handleSearchChange} />
           <CartPreview
             items={cartItems}
+            userInfo={user}
             onRemove={onRemoveFromCart}
             onCheckout={onCheckout}
             onUpdateQuantity={onUpdateCartQuantity}

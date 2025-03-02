@@ -1,19 +1,19 @@
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, Printer } from "lucide-react";
+import { LogOut, Printer, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
-// Asegúrate de que VITE_API_URL está definida en tu .env de frontend
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 interface OrderSummaryPageState {
   items: any[];
   userInfo: {
+    username?: string;
     fullName: string;
     department: string;
-    costCenter: string;
+    costCenter: string; // Ej.: "3145 - UCIPO"
     email: string;
   };
   deliveryLocation: string;
@@ -33,11 +33,15 @@ const OrderSummary = () => {
     }
   }, [location.state, navigate]);
 
-  // Handler para enviar el correo con los datos estructurados para el order summary
+  const handleGoToIndex = () => {
+    navigate(-1);
+  };
+
   const handleSendOrder = async () => {
     try {
       const payload = {
         userInfo: {
+          username: state.userInfo.username,
           fullName: state.userInfo.fullName,
           department: state.userInfo.department,
           costCenter: state.userInfo.costCenter,
@@ -55,10 +59,21 @@ const OrderSummary = () => {
       };
 
       await axios.post(`${API_URL}/sendOrder`, payload, { withCredentials: true });
+      
+      // Toast de éxito con variant "default" (personaliza su estilo en CSS si es necesario)
       toast({
+        variant: "default",
         title: "Correu enviat",
         description: "La sol·licitud ha estat enviada al departament de compres",
+        duration: 3000,
+        className: "bg-green-200 text-green-900",
       });
+
+      // Esperar 5 segundos antes de hacer logout y redirigir
+      setTimeout(() => {
+        sessionStorage.clear();
+        window.location.href = "/login";
+      }, 3000);
     } catch (error) {
       console.error("Error enviant la sol·licitud:", error);
       toast({
@@ -74,7 +89,7 @@ const OrderSummary = () => {
   };
 
   const handleLogout = () => {
-    localStorage.clear();
+    sessionStorage.clear();
     toast({
       title: "Sessió tancada",
       description: "Has tancat la sessió correctament",
@@ -89,99 +104,100 @@ const OrderSummary = () => {
   return (
     <div className="min-h-screen bg-white print-area">
       <div className="container max-w-4xl mx-auto py-8">
-        {/* Se muestra el order summary en pantalla */}
-        <div className="space-y-8">
-          <div className="flex items-center justify-between border-b pb-4">
-            <img
-              src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png"
-              alt="Fundació Puigvert"
-              className="h-16"
-            />
-            <h1 className="text-2xl font-bold text-primary">
-              Sol·licitud de Material
-            </h1>
-          </div>
-
-          <div className="grid gap-8">
-            <div className="bg-gray-50 p-6 rounded-lg print:bg-white print:border">
-              <h2 className="text-lg font-semibold mb-4">
-                Informació de la Sol·licitud
-              </h2>
-              <div className="grid gap-2">
-                <p>
-                  <strong>Sol·licitant:</strong> {state.userInfo.fullName}
-                </p>
-                <p>
-                  <strong>Departament:</strong> {state.userInfo.department}
-                </p>
-                <p>
-                  <strong>Centre de cost:</strong> {state.userInfo.costCenter}
-                </p>
-                <p>
-                  <strong>Correu electrònic:</strong> {state.userInfo.email}
-                </p>
-                <p>
-                  <strong>Lloc de lliurament:</strong>{" "}
-                  {state.deliveryLocation}
-                </p>
-                {state.comments && (
-                  <p>
-                    <strong>Comentaris:</strong> {state.comments}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-gray-50 p-6 rounded-lg print:bg-white print:border">
-              <h2 className="text-lg font-semibold mb-4">
-                Articles Sol·licitats
-              </h2>
-              <div className="divide-y">
-                {state.items.map((item) => (
-                  <div
-                    key={item.product.codsap}
-                    className="py-4 flex items-start justify-between"
-                  >
-                    <div className="flex-1">
-                      <p className="font-medium">
-                        {item.product.descripcion}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        SAP: {item.product.codsap} | AS400: {item.product.codas400}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Ubicación: {item.product.ubicacion}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-medium whitespace-nowrap">
-                        {item.quantity} unitats
-                      </span>
-                      <div className="w-6 h-6 border rounded-sm print:border-2 flex-shrink-0" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+        {/* Encabezado principal */}
+        <div className="flex items-center justify-between border-b pb-4">
+          <img
+            src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png"
+            alt="Fundació Puigvert"
+            className="h-16"
+          />
+          <h1 className="text-2xl font-bold text-primary">Sol·licitud de Material</h1>
         </div>
 
-        <div className="flex justify-between mt-8 no-print">
-          <Button onClick={handlePrint} className="gap-2">
-            <Printer className="h-4 w-4" />
+        {/* Botones en la parte superior */}
+        <div className="flex flex-wrap gap-2 mt-4 no-print">
+          <Button onClick={handleGoToIndex} variant="outline" className="px-4 py-2">
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Tornar a selecció d'articles
+          </Button>
+          <Button onClick={handlePrint} variant="outline" className="px-4 py-2">
+            <Printer className="h-4 w-4 mr-1" />
             Imprimir
           </Button>
-          <Button
-            onClick={handleSendOrder}
-            className="gap-2"
-            variant="secondary"
-          >
+          <Button onClick={handleSendOrder} variant="secondary" className="px-4 py-2">
             Enviar sol·licitud a Compres
           </Button>
-          <Button onClick={handleLogout} variant="outline" className="gap-2">
-            <LogOut className="h-4 w-4" />
+          <Button onClick={handleLogout} variant="outline" className="px-4 py-2">
+            <LogOut className="h-4 w-4 mr-1" />
             Tancar sessió
           </Button>
+        </div>
+
+        {/* Contenido principal */}
+        <div className="space-y-8 mt-6">
+          {/* Información de la solicitud en tabla elegante */}
+          <div className="bg-gray-50 p-4 rounded-lg print:bg-white print:border">
+            <h2 className="text-lg font-semibold mb-4">Informació de la Sol·licitud</h2>
+            <table className="w-full text-xs text-gray-700">
+              <tbody>
+                {state.userInfo.username && (
+                  <tr className="border-b last:border-0">
+                    <td className="py-1 font-semibold w-1/3">Usuari (username)</td>
+                    <td className="py-1">{state.userInfo.username}</td>
+                  </tr>
+                )}
+                <tr className="border-b last:border-0">
+                  <td className="py-1 font-semibold w-1/3">Nom complet</td>
+                  <td className="py-1">{state.userInfo.fullName}</td>
+                </tr>
+                <tr className="border-b last:border-0">
+                  <td className="py-1 font-semibold w-1/3">Departament</td>
+                  <td className="py-1">{state.userInfo.department}</td>
+                </tr>
+                <tr className="border-b last:border-0">
+                  <td className="py-1 font-semibold w-1/3">Correu electrònic</td>
+                  <td className="py-1">{state.userInfo.email}</td>
+                </tr>
+                <tr className="border-b last:border-0">
+                  <td className="py-1 font-semibold w-1/3">Centre de cost (CAI Petició)</td>
+                  <td className="py-1">{state.userInfo.costCenter}</td>
+                </tr>
+                <tr className="border-b last:border-0">
+                  <td className="py-1 font-semibold w-1/3">Lloc de lliurament</td>
+                  <td className="py-1">{state.deliveryLocation}</td>
+                </tr>
+                {state.comments && (
+                  <tr className="border-b last:border-0">
+                    <td className="py-1 font-semibold w-1/3">Comentaris</td>
+                    <td className="py-1">{state.comments}</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Lista de artículos con filas compactas */}
+          <div className="bg-gray-50 p-4 rounded-lg print:bg-white print:border">
+            <h2 className="text-lg font-semibold mb-4">Articles Sol·licitats</h2>
+            <div className="divide-y">
+              {state.items.map((item) => (
+                <div key={item.product.codsap} className="py-1 flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="font-medium text-xs">{item.product.descripcion}</p>
+                    <p className="text-xs text-gray-500">
+                      SAP: {item.product.codsap} | AS400: {item.product.codas400}
+                    </p>
+  
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium whitespace-nowrap text-xs">
+                      {item.quantity} unitats
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

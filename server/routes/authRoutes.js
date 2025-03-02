@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import ldapService from '../services/ldapService.js'; // Ajusta la ruta si es necesario
+import ldapService from '../services/ldapService.js';
 
 const router = express.Router();
 
@@ -9,7 +9,6 @@ router.post('/login', async (req, res) => {
 
   try {
     const { username, password } = req.body;
-
     if (!username || !password) {
       console.error("❌ Error: Falta username o password en la solicitud");
       return res.status(400).json({
@@ -22,7 +21,6 @@ router.post('/login', async (req, res) => {
 
     // Llamada a ldapService para autenticar con LDAP
     const result = await ldapService.authenticate(username, password);
-
     if (!result.success) {
       return res.status(401).json({
         success: false,
@@ -32,18 +30,23 @@ router.post('/login', async (req, res) => {
 
     console.log("✅ Autenticación exitosa:", result.user);
 
-    // Generar un token JWT para el usuario autenticado
+    // Generar token JWT con los datos esenciales del usuario,
+    // sin usar 'id' ya que el LDAP no lo proporciona, y dejando costCenter vacío.
     const tokenPayload = {
-      id: result.user.id, // Asegúrate de que 'id' o algún identificador esté presente
-      username: result.user.username
+      username: result.user.username,
+      fullName: result.user.fullName,
+      department: result.user.department,
+      email: result.user.email,
+      costCenter: result.user.costCenter  // Se espera que sea "" (vacío)
     };
-    const jwtSecret = process.env.JWT_SECRET || 'defaultSecret'; // Cambia 'defaultSecret' por algo más seguro en producción
+
+    const jwtSecret = process.env.JWT_SECRET || 'defaultSecret';
     const token = jwt.sign(tokenPayload, jwtSecret, { expiresIn: '1h' });
 
     // Establecer la cookie httpOnly con el token
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Solo en HTTPS en producción
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 3600000 // 1 hora en milisegundos
     });

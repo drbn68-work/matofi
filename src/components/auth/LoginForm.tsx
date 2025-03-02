@@ -4,12 +4,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
-import { loginWithLDAP } from "@/lib/api"; // Asegúrate que loginWithLDAP retorne { success, user, error }
+import { loginWithLDAP } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import AuthTypeSelector from "./AuthTypeSelector";
 import { LoginCredentials } from "@/lib/types";
 
-// Eliminamos la propiedad costCenter del esquema
 const formSchema = z.object({
   username: z.string().min(1, "Nom d'usuari requerit"),
   password: z.string().min(1, "Contrasenya requerida"),
@@ -19,7 +18,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 interface LoginFormProps {
-  onLoginSuccess: (userData: any) => void; // "any" o un tipo definido
+  onLoginSuccess: (userData: any) => void;
   onError: (errMsg: string) => void;
 }
 
@@ -29,7 +28,6 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Quitamos costCenter de defaultValues
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -43,7 +41,6 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
     setIsLoading(true);
     setErrorMessage(null);
 
-    // Ya no pasamos costCenter
     const loginData: LoginCredentials = {
       username: data.username,
       password: data.password,
@@ -51,15 +48,22 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
     };
 
     try {
-      // Si se ha seleccionado el modo local, verificamos las credenciales de prueba
+      // Modo local para pruebas
       if (authType === "local") {
         if (data.username === "testuser" && data.password === "testuser") {
-          // Creamos un usuario simulado para pruebas
-          const fakeUser = { username: "testuser", fullName: "Test User" };
+          const fakeUser = {
+            username: "testuser",
+            fullName: "Test User",
+            department: "",
+            email: "",
+            costCenter: "" // se deja vacío para que el usuario lo complete
+          };
           toast({
             title: "Inici de sessió exitós",
             description: `Benvingut, ${fakeUser.fullName}`,
           });
+          // Guardamos el usuario en sessionStorage para que persista durante la sesión
+          sessionStorage.setItem("user", JSON.stringify(fakeUser));
           onLoginSuccess(fakeUser);
         } else {
           const errorMsg = "Credenciales inválidas para el modo local.";
@@ -71,10 +75,11 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
             description: errorMsg,
           });
         }
-        return setIsLoading(false);
+        setIsLoading(false);
+        return;
       }
 
-      // Si el modo es LDAP, seguimos el flujo habitual
+      // Modo LDAP: llamamos al servicio de autenticación
       console.log("Iniciando proceso de autenticación...");
       const response = await loginWithLDAP(loginData);
 
@@ -90,12 +95,13 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
           title: "Inici de sessió exitós",
           description: `Benvingut, ${user.fullName}`,
         });
+        // Guardamos el usuario en sessionStorage para que persista durante la sesión
+        sessionStorage.setItem("user", JSON.stringify(user));
         onLoginSuccess(user);
       } else {
         console.error("Error de autenticación:", error);
         setErrorMessage(error || "Error d'autenticació desconegut");
         onError(error || "Error d'autenticació desconegut");
-
         toast({
           variant: "destructive",
           title: "Error d'autenticació",
@@ -105,10 +111,8 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
     } catch (err: any) {
       const errorMsg = err instanceof Error ? err.message : "Error desconegut";
       console.error("Error d'inici de sessió:", err);
-
       setErrorMessage(`Error de connexió: ${errorMsg}`);
       onError(`Error de connexió: ${errorMsg}`);
-
       toast({
         variant: "destructive",
         title: "Error",
@@ -147,7 +151,9 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
       {errorMessage && (
         <Alert variant="destructive" className="mb-4 border-red-500 bg-red-50">
           <AlertTriangle className="h-4 w-4 text-red-500" />
-          <AlertTitle className="text-sm font-medium text-red-600">Error d'autenticació</AlertTitle>
+          <AlertTitle className="text-sm font-medium text-red-600">
+            Error d'autenticació
+          </AlertTitle>
           <AlertDescription className="mt-2 text-xs text-red-600 max-h-60 overflow-y-auto">
             {formatErrorMessage(errorMessage)}
           </AlertDescription>

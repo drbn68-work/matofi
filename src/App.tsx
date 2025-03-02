@@ -6,8 +6,7 @@ import NotFound from "@/pages/NotFound";
 import OrderSummary from "@/pages/OrderSummary";
 import { Toaster } from "@/components/ui/toaster";
 
-function PrivateRoute({ children, user }: { children: React.ReactNode; user: string | null }) {
-  // Si no hay usuario, redirigir
+function PrivateRoute({ children, user }: { children: React.ReactNode; user: any }) {
   if (!user) {
     console.log("PrivateRoute - Usuario no autenticado, redirigiendo a /login");
     return <Navigate to="/login" replace />;
@@ -20,33 +19,21 @@ export default function App() {
   const [user, setUser] = useState<string | null>(null);
 
   useEffect(() => {
-    // Leer del localStorage sólo UNA VEZ al montar la app
-    const storedUser = localStorage.getItem("user");
+    // Leer del sessionStorage al montar la app
+    const storedUser = sessionStorage.getItem("user");
     if (storedUser) {
       setUser(storedUser);
     }
-
-    // Si quieres detectar cambios de localStorage en OTRAS pestañas
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "user") {
-        const updatedUser = localStorage.getItem("user");
-        setUser(updatedUser);
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
+    // No se necesita handleStorageChange, sessionStorage no emite eventos como localStorage
   }, []);
 
-  // Convertimos la string del localStorage en objeto para pasárselo a Index
+  // Convertimos la cadena JSON en un objeto
   const parsedUser = user ? JSON.parse(user) : null;
 
   return (
     <Router>
       <Routes>
-        {/* Ruta raíz protegida: si no hay user -> al login */}
+        {/* Ruta raíz protegida: si hay usuario, muestra Index; de lo contrario, redirige a /login */}
         <Route
           path="/"
           element={
@@ -60,17 +47,15 @@ export default function App() {
           }
         />
 
-        {/* Ruta /login: si YA hay user, redirige a "/", si no -> login */}
+        {/* Ruta /login: si ya hay usuario, redirige a /; de lo contrario, muestra Login */}
         <Route
           path="/login"
           element={
-            user
-              ? <Navigate to="/" replace />
-              : <Login setUser={setUser} />
+            user ? <Navigate to="/" replace /> : <Login setUser={setUser} />
           }
         />
 
-        {/* Otra ruta protegida */}
+        {/* Ruta protegida para OrderSummary */}
         <Route
           path="/order-summary"
           element={

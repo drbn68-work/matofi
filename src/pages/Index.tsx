@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getProducts, getCategories } from "@/lib/api"; // Asegúrate de que getProducts reciba (page, pageSize, search, category)
+import { getProducts, getCategories } from "@/lib/api"; // getProducts debe aceptar (page, pageSize, search, category)
 import { CartItem, Product, User } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Toggle } from "@/components/ui/toggle";
@@ -12,7 +12,6 @@ import { Pagination } from "@/components/products/Pagination";
 // Definimos cuántos artículos traemos por página
 const ITEMS_PER_PAGE = 8;
 
-// -- FUNCIÓN PARA CALCULAR LAS PÁGINAS A MOSTRAR --
 function getPagesToShow(currentPage: number, totalPages: number, maxVisible: number): number[] {
   const pages: number[] = [];
   if (totalPages <= maxVisible) {
@@ -45,11 +44,14 @@ interface IndexProps {
 export default function Index({ user }: IndexProps) {
   const { toast } = useToast();
 
-  // Estados para la búsqueda, carrito y categoría
+  // Estados para búsqueda, carrito y categoría
   const [search, setSearch] = useState("");
-  // Usamos null para indicar "sin filtro"
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+
+  // Estados para campos adicionales
+  const [deliveryLocation, setDeliveryLocation] = useState("");
+  const [comments, setComments] = useState("");
 
   // Estados para la paginación
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,7 +64,32 @@ export default function Index({ user }: IndexProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
-  // 1) Cargar las categorías al montar (sin agregar "Tots")
+  // 1) Al montar, recuperar carrito y campos adicionales de sessionStorage
+  useEffect(() => {
+    const storedCart = sessionStorage.getItem("cartItems");
+    if (storedCart) {
+      setCartItems(JSON.parse(storedCart));
+    }
+    const storedDelivery = sessionStorage.getItem("deliveryLocation");
+    if (storedDelivery) {
+      setDeliveryLocation(storedDelivery);
+    }
+    const storedComments = sessionStorage.getItem("comments");
+    if (storedComments) {
+      setComments(storedComments);
+    }
+  }, []);
+
+  // 2) Guardar cambios en deliveryLocation y comments en sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem("deliveryLocation", deliveryLocation);
+  }, [deliveryLocation]);
+
+  useEffect(() => {
+    sessionStorage.setItem("comments", comments);
+  }, [comments]);
+
+  // 3) Cargar las categorías al montar
   useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -75,11 +102,10 @@ export default function Index({ user }: IndexProps) {
     loadCategories();
   }, []);
 
-  // 2) Cargar productos de la página actual cuando cambian currentPage, search o selectedCategory
+  // 4) Cargar productos de la página actual cuando cambian currentPage, search o selectedCategory
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        // Si no hay categoría seleccionada, pasamos cadena vacía para no filtrar por ella
         const catParam = selectedCategory ? selectedCategory : "";
         const data = await getProducts(currentPage, ITEMS_PER_PAGE, search, catParam);
         setProducts(data.items);
@@ -96,33 +122,48 @@ export default function Index({ user }: IndexProps) {
     loadProducts();
   }, [currentPage, search, selectedCategory, toast]);
 
-  // 3) Cuando cambia la búsqueda o la categoría, volvemos a la página 1
+  // 5) Reiniciamos a página 1 cuando cambia la búsqueda o la categoría
   useEffect(() => {
     setCurrentPage(1);
   }, [search, selectedCategory]);
 
-  // Lógica de logout
+  // Lógica de logout: al hacer logout se borra el usuario y el carrito de sessionStorage
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("cartItems");
+    sessionStorage.removeItem("deliveryLocation");
+    sessionStorage.removeItem("comments");
     window.location.href = "/login";
   };
 
-  // Funciones para el carrito
+  // Funciones para el carrito: guardar en sessionStorage cada vez que se modifique
   const handleAddToCart = (product: Product, quantity: number) => {
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.product.codsap === product.codsap);
+      let newCart: CartItem[];
       if (existingItem) {
-        return prev.map((item) =>
+        newCart = prev.map((item) =>
           item.product.codsap === product.codsap
             ? { ...item, quantity: item.quantity + quantity }
             : item
         );
+      } else {
+        newCart = [...prev, { product, quantity }];
       }
-      return [...prev, { product, quantity }];
+      sessionStorage.setItem("cartItems", JSON.stringify(newCart));
+      return newCart;
     });
     toast({
       title: "Material afegit",
       description: `${quantity} x ${product.descripcion}`,
+    });
+  };
+
+  const handleRemoveFromCart = (productId: string) => {
+    setCartItems((prev) => {
+      const newCart = prev.filter((item) => item.product.codsap !== productId);
+      sessionStorage.setItem("cartItems", JSON.stringify(newCart));
+      return newCart;
     });
   };
 
@@ -131,31 +172,25 @@ export default function Index({ user }: IndexProps) {
       handleRemoveFromCart(productId);
       return;
     }
-    setCartItems((prev) =>
-      prev.map((item) =>
+    setCartItems((prev) => {
+      const newCart = prev.map((item) =>
         item.product.codsap === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  const handleRemoveFromCart = (productId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.product.codsap !== productId));
-  };
-
-  const handleCheckout = () => {
-    toast({
-      title: "Sol·licitud enviada",
-      description: "La teva sol·licitud ha estat enviada correctament!",
+      );
+      sessionStorage.setItem("cartItems", JSON.stringify(newCart));
+      return newCart;
     });
-    setCartItems([]);
   };
 
-  // 4) Calculamos las páginas visibles (máx. 5)
+  // Al "checkout" no limpiamos el carrito para preservar la información durante la sesión
+  const handleCheckout = () => {
+    // No se elimina el carrito
+  };
+
+  // Paginación: calcular páginas visibles (máx. 5)
   const pagesToShow = getPagesToShow(currentPage, totalPages, 5);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header con el search, carrito, etc. */}
       <Header
         user={user}
         onLogout={handleLogout}
@@ -168,7 +203,6 @@ export default function Index({ user }: IndexProps) {
         onCategorySelect={setSelectedCategory}
       />
 
-      {/* Contenido principal */}
       <main className="container pt-24">
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <CategoryFilter
@@ -185,7 +219,6 @@ export default function Index({ user }: IndexProps) {
           </Toggle>
         </div>
 
-        {/* Se muestran los productos recibidos del servidor */}
         <ProductGrid
           products={products}
           onAddToCart={handleAddToCart}

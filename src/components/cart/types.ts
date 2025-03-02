@@ -1,12 +1,15 @@
 
 import { CartItem } from "@/lib/types";
 
+// Ejemplo de definición actualizada de UserInfo
 export interface UserInfo {
+  username: string;
   fullName: string;
   department: string;
   costCenter: string;
-  email?: string;
+  email: string;
 }
+
 
 export interface CartContextType {
   items: CartItem[];
