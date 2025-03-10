@@ -5,7 +5,6 @@ import ldapService from '../services/ldapService.js';
 const router = express.Router();
 
 router.post('/login', async (req, res) => {
-  console.log("📨 Solicitud de login recibida:", req.body);
 
   try {
     const { username, password } = req.body;

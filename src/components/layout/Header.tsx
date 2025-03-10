@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { CartPreview } from "@/components/CartPreview";
 import { CartItem } from "@/lib/types";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   user: User | null;
@@ -14,8 +15,6 @@ interface HeaderProps {
   onRemoveFromCart: (productId: string) => void;
   onCheckout: () => void;
   onUpdateCartQuantity: (productId: string, quantity: number) => void;
-
-  // Añadimos esta prop para resetear o cambiar la categoría
   onCategorySelect: (category: string | null) => void;
 }
 
@@ -30,22 +29,27 @@ export const Header = ({
   onUpdateCartQuantity,
   onCategorySelect,
 }: HeaderProps) => {
+  const navigate = useNavigate();
+
   // Manejador local para cambios en la barra de búsqueda
   const handleSearchChange = (value: string) => {
     onSearchChange(value);
     // Cada vez que cambie la búsqueda, reseteamos la categoría
-    onCategorySelect(null); 
-    // O si prefieres "Tots":
-    // onCategorySelect("Tots");
+    onCategorySelect(null);
+  };
+
+  // Manejador para ir al historial de pedidos
+  const handleViewOrdersHistory = () => {
+    navigate("/orders-history");
   };
 
   return (
     <header className="fixed top-0 z-10 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container flex items-center justify-between py-4">
         <div className="flex items-center gap-6">
-          <img 
-            src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png" 
-            alt="Fundació Puigvert" 
+          <img
+            src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png"
+            alt="Fundació Puigvert"
             className="h-12"
           />
           {user && (
@@ -71,9 +75,21 @@ export const Header = ({
             onUpdateQuantity={onUpdateCartQuantity}
           />
           {user && (
-            <Button variant="ghost" size="icon" onClick={onLogout} className="ml-2">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <>
+              {/* Botón para ver historial, con estilo outline y tamaño pequeño */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleViewOrdersHistory}
+                className="hidden sm:inline-flex ml-2"
+              >
+                Historial Pedidos
+              </Button>
+
+              <Button variant="ghost" size="icon" onClick={onLogout} className="ml-2">
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </>
           )}
         </div>
       </div>

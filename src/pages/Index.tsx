@@ -44,7 +44,7 @@ interface IndexProps {
 export default function Index({ user }: IndexProps) {
   const { toast } = useToast();
 
-  // Estados para búsqueda, carrito y categoría
+  // Estados para búsqueda, carret y categoría
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -64,7 +64,7 @@ export default function Index({ user }: IndexProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
-  // 1) Al montar, recuperar carrito y campos adicionales de sessionStorage
+  // 1) Al montar, recuperar carret y campos adicionales de sessionStorage
   useEffect(() => {
     const storedCart = sessionStorage.getItem("cartItems");
     if (storedCart) {
@@ -127,16 +127,27 @@ export default function Index({ user }: IndexProps) {
     setCurrentPage(1);
   }, [search, selectedCategory]);
 
-  // Lógica de logout: al hacer logout se borra el usuario y el carrito de sessionStorage
+  // Lógica de logout: al hacer logout se borra el usuario y el carret de sessionStorage
   const handleLogout = () => {
     sessionStorage.removeItem("user");
     sessionStorage.removeItem("cartItems");
     sessionStorage.removeItem("deliveryLocation");
     sessionStorage.removeItem("comments");
-    window.location.href = "/login";
+    sessionStorage.removeItem("costCenter");
+    sessionStorage.clear();
+    toast({
+      title: "Sessió tancada",
+      description: "Has tancat la sessió correctament",
+      className: "bg-green-200 text-green-900",
+    });
+
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 500);
+
   };
 
-  // Funciones para el carrito: guardar en sessionStorage cada vez que se modifique
+  // Funciones para el carret: guardar en sessionStorage cada vez que se modifique
   const handleAddToCart = (product: Product, quantity: number) => {
     setCartItems((prev) => {
       const existingItem = prev.find((item) => item.product.codsap === product.codsap);
@@ -156,6 +167,7 @@ export default function Index({ user }: IndexProps) {
     toast({
       title: "Material afegit",
       description: `${quantity} x ${product.descripcion}`,
+      className: "bg-green-200 text-green-900",
     });
   };
 
@@ -181,9 +193,9 @@ export default function Index({ user }: IndexProps) {
     });
   };
 
-  // Al "checkout" no limpiamos el carrito para preservar la información durante la sesión
+  // Al "checkout" no limpiamos el carret para preservar la información durante la sesión
   const handleCheckout = () => {
-    // No se elimina el carrito
+    // No se elimina el carret
   };
 
   // Paginación: calcular páginas visibles (máx. 5)

@@ -17,7 +17,7 @@ export interface User {
   email: string;
 }
 
-// Item del carrito
+// Item del carret
 export interface CartItem {
   product: Product;
   quantity: number;
@@ -37,7 +37,7 @@ export interface LoginResponse {
   error?: string;
 }
 
-// Props para el formulario de revisión del carrito
+// Props para el formulario de revisión del carret
 export interface CartReviewFormProps {
   items: CartItem[];
   userInfo: User; // Ahora usamos nuestra interfaz User
@@ -51,7 +51,7 @@ export interface CartReviewFormProps {
   onCostCenterChange: (value: string) => void; // Nuevo callback para actualizar el centre de cost
 }
 
-// Props para la confirmación del pedido en el carrito
+// Props para la confirmación del pedido en el carret
 export interface CartOrderConfirmationProps {
   onClose: () => void;
   orderNumber: string;

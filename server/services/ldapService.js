@@ -1,5 +1,5 @@
 import ldap from 'ldapjs';
-import config from '../config/ldapConfig.js';
+import { config, fallbackConfig } from '../config/ldapConfig.js';
 
 class LDAPService {
   constructor() {
@@ -15,20 +15,54 @@ class LDAPService {
   }
 
   async authenticate(username, password) {
+    // Intentamos con el LDAP principal (cliente creado en el constructor)
+    try {
+      console.log("Intentando autenticación con el LDAP primario");
+      return await this._authenticateWithConfig(config, username, password, this.client);
+    } catch (primaryError) {
+      console.error("Error en LDAP primario:", primaryError.message);
+      // Si falla, creamos un nuevo cliente con la configuración de respaldo
+      const fallbackClient = ldap.createClient({
+        url: fallbackConfig.url,
+        reconnect: true,
+        tlsOptions: { rejectUnauthorized: false }
+      });
+      fallbackClient.on('error', (err) => {
+        console.error('🚨 LDAP fallback connection error:', err);
+      });
+      console.log("Intentando autenticación con el LDAP secundario (fallback)");
+      return await this._authenticateWithConfig(fallbackConfig, username, password, fallbackClient);
+    }
+  }
+
+  /**
+   * Función auxiliar que realiza el proceso de bind inicial, búsqueda del usuario
+   * y autenticación del usuario usando la configuración pasada.
+   * Se conserva la lógica original (incluida la reconstrucción con 'pojo').
+   * Solo se modifica la parte de bind con las credenciales del usuario para
+   * usar un DN simple (por ejemplo, "fp\<username>") en lugar del obtenido.
+   * Además, si la variable de entorno SKIP_LDAP_AUTH está activada,
+   * se omite la validación de la contraseña para pruebas.
+   * @param {Object} currentConfig Configuración (principal o fallback).
+   * @param {string} username 
+   * @param {string} password 
+   * @param {Object} client Cliente LDAP a utilizar.
+   * @returns {Promise<Object>}
+   */
+  _authenticateWithConfig(currentConfig, username, password, client) {
     return new Promise((resolve, reject) => {
-      // Log de depuración: mostrar el DN y la contraseña de bind
       console.log("Intentando bind con:", {
-        bindDN: config.bindDN,
-        bindCredentials: config.bindCredentials
+        bindDN: currentConfig.bindDN,
+        bindCredentials: currentConfig.bindCredentials
       });
   
-      // Bind inicial con FP\matofi_bind
-      this.client.bind(config.bindDN, config.bindCredentials, (bindErr) => {
+      // Bind inicial con la cuenta de servicio
+      client.bind(currentConfig.bindDN, currentConfig.bindCredentials, (bindErr) => {
         if (bindErr) {
-          console.error("🚨 Error en bind inicial:", bindErr);
-          return reject(new Error('Error en la conexión al servidor LDAP'));
+          client.unbind();
+          return reject(new Error(`Error en bind inicial con ${currentConfig.url}: ${bindErr.message}`));
         }
-        console.log("✅ Bind inicial exitoso con", config.bindDN);
+        console.log("✅ Bind inicial exitoso con", currentConfig.bindDN);
 
         // Búsqueda por sAMAccountName, solicitando atributos adicionales
         const searchOptions = {
@@ -37,9 +71,9 @@ class LDAPService {
           attributes: ['dn', 'cn', 'sAMAccountName', 'mail', 'department']
         };
 
-        this.client.search(config.baseDN, searchOptions, (searchErr, res) => {
+        client.search(currentConfig.baseDN, searchOptions, (searchErr, res) => {
           if (searchErr) {
-            console.error("🚨 Error al buscar el usuario en LDAP:", searchErr);
+            client.unbind();
             return reject(searchErr);
           }
 
@@ -79,7 +113,7 @@ class LDAPService {
             }
 
             console.log("✅ Usuario encontrado:", entryData);
-            console.log("🔑 Intentando autenticar con DN:", userDN);
+            console.log("🔑 Intentando autenticar con DN obtenido:", userDN);
             console.log("🔑 Tipo de password recibido:", typeof password);
             console.log("🔑 Password recibido (enmascarado):", password ? '*'.repeat(password.length) : "No definido");
 
@@ -87,20 +121,40 @@ class LDAPService {
               console.error("❌ Error: `userDN` o `password` no son cadenas válidas", { userDN, password });
               return reject(new Error('Error interno: Formato inválido de credenciales'));
             }
-
-            // Bind con las credenciales del usuario
-            this.client.bind(userDN, password, (err) => {
+            
+            // En lugar de usar el DN obtenido, se construye un simple DN: "fp\<username>"
+            const simpleDN = `fp\\${username}`;
+            console.log("🔑 Intentando autenticar con DN simple:", simpleDN);
+            
+            // Modo pruebas: si SKIP_LDAP_AUTH está activado, se omite la validación de la contraseña.
+            if (process.env.SKIP_LDAP_AUTH === "true") {
+              console.log("⚠️ Modo pruebas activado: se omite la validación de la contraseña.");
+              client.unbind();
+              return resolve({
+                success: true,
+                user: {
+                  username: entryData.sAMAccountName || entryData.samaccountname,
+                  fullName: entryData.cn,
+                  department: entryData.department || "",
+                  email: entryData.mail || "",
+                  costCenter: ""  // Se deja vacío para que el usuario lo complete posteriormente
+                }
+              });
+            }
+            
+            // Bind con las credenciales del usuario usando el simple DN
+            client.bind(simpleDN, password, (err) => {
+              client.unbind();
               if (err) {
                 console.error("❌ Error en autenticación del usuario:", err);
                 return reject(new Error('Credenciales inválidas'));
               }
 
               console.log("🔓 Autenticación exitosa para", username);
-              // Devuelve el objeto de usuario, dejando costCenter vacío
               resolve({
                 success: true,
                 user: {
-                  username: entryData.samaccountname,
+                  username: entryData.sAMAccountName || entryData.samaccountname,
                   fullName: entryData.cn,
                   department: entryData.department || "",
                   email: entryData.mail || "",

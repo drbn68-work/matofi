@@ -1,0 +1,23 @@
+# Imagen base ligera de Node.js
+FROM node:18-alpine
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar package.json y package-lock.json desde la raíz del proyecto
+COPY ../package*.json ./
+
+# Instalar solo dependencias de producción
+RUN npm install --only=production
+
+# Copiar solo el código del backend (excluir frontend)
+COPY ./server /app
+
+# Copiar el archivo Excel al contenedor
+COPY ./public/catalogomatofi.xlsx /app/public/catalogomatofi.xlsx
+
+# Exponer el puerto del backend
+EXPOSE 3000
+
+# Comando de arranque
+CMD ["node", "server.js"]

@@ -1,3 +1,4 @@
+// src/components/CartPreview.tsx
 import React, { useState, useEffect } from "react";
 import { CartItem } from "@/lib/types";
 import {
@@ -16,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 
 interface CartPreviewProps {
   items: CartItem[];
-  userInfo: UserInfo; // Información del usuario proveniente del LDAP (sin costCenter, o con costCenter vacío)
+  userInfo: UserInfo;
   onRemove: (productId: string) => void;
   onCheckout: () => void;
   onUpdateQuantity: (productId: string, quantity: number) => void;
@@ -32,19 +33,20 @@ export const CartPreview = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // 1) Estados para los campos a persistir
+  // Estados para los campos a persistir
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [comments, setComments] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedItems, setSubmittedItems] = useState<CartItem[]>([]);
 
-  // 2) Estado local para userInfo, con costCenter inicial vacío
+  // Estado local para userInfo, añadiendo department y costCenter inicial vacío
   const [localUserInfo, setLocalUserInfo] = useState<UserInfo>({
     ...userInfo,
+    department: userInfo.department || "", // Asegúrate de que 'department' existe en 'UserInfo'
     costCenter: "",
   });
 
-  // 3) Al montar, recuperar costCenter, deliveryLocation y comments desde sessionStorage
+  // Recuperar datos persistidos de sessionStorage al montar
   useEffect(() => {
     const storedCostCenter = sessionStorage.getItem("costCenter");
     if (storedCostCenter) {
@@ -60,12 +62,39 @@ export const CartPreview = ({
     if (storedComments) {
       setComments(storedComments);
     }
+
+    // Recuperar el department de sessionStorage
+    const storedDepartment = sessionStorage.getItem("department");
+    if (storedDepartment) {
+      setLocalUserInfo((prev) => ({ ...prev, department: storedDepartment }));
+    }
   }, []);
 
-  // 4) Guardar en sessionStorage cada vez que cambien
+  // Escuchar el evento "pageshow" para volver a cargar costCenter y department si se navega hacia atrás
+  useEffect(() => {
+    const handlePageShow = () => {
+      const storedCostCenter = sessionStorage.getItem("costCenter");
+      if (storedCostCenter) {
+        setLocalUserInfo((prev) => ({ ...prev, costCenter: storedCostCenter }));
+      }
+
+      const storedDepartment = sessionStorage.getItem("department");
+      if (storedDepartment) {
+        setLocalUserInfo((prev) => ({ ...prev, department: storedDepartment }));
+      }
+    };
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
+  // Guardar en sessionStorage cuando cambien costCenter, department, deliveryLocation y comments
   useEffect(() => {
     sessionStorage.setItem("costCenter", localUserInfo.costCenter);
   }, [localUserInfo.costCenter]);
+
+  useEffect(() => {
+    sessionStorage.setItem("department", localUserInfo.department);
+  }, [localUserInfo.department]);
 
   useEffect(() => {
     sessionStorage.setItem("deliveryLocation", deliveryLocation);
@@ -75,18 +104,24 @@ export const CartPreview = ({
     sessionStorage.setItem("comments", comments);
   }, [comments]);
 
-  // Función para actualizar costCenter
+  // Función para actualizar costCenter (se delega la validación en CartReviewForm)
   const handleCostCenterChange = (value: string) => {
     setLocalUserInfo((prev) => ({ ...prev, costCenter: value }));
   };
 
-  // Cálculo de ítems totales
   const totalItems = isSubmitted
     ? submittedItems.reduce((acc, item) => acc + item.quantity, 0)
     : items.reduce((acc, item) => acc + item.quantity, 0);
 
-  // Confirmar solicitud y navegar a OrderSummary
   const handleSubmit = () => {
+    if (!localUserInfo.costCenter.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "El camp Centre de cost (CAI Petició) és obligatori",
+      });
+      return;
+    }
     if (!deliveryLocation.trim()) {
       toast({
         variant: "destructive",
@@ -95,11 +130,9 @@ export const CartPreview = ({
       });
       return;
     }
-
     setSubmittedItems([...items]);
     setIsSubmitted(true);
     onCheckout();
-
     navigate("/order-summary", {
       state: {
         items,
@@ -110,12 +143,10 @@ export const CartPreview = ({
     });
   };
 
-  // Función para cerrar la confirmación del pedido
   const handleClose = () => {
     setIsSubmitted(false);
   };
 
-  // Generar un número de pedido único
   const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
 
   return (
@@ -129,7 +160,6 @@ export const CartPreview = ({
             Sol·licitud de Material ({totalItems} articles)
           </SheetTitle>
         </SheetHeader>
-
         {isSubmitted ? (
           <CartOrderConfirmation
             onClose={handleClose}

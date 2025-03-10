@@ -1,0 +1,9 @@
+# Excluir carpetas y archivos que no sean necesarios en el build final
+node_modules
+.git
+.gitignore
+Dockerfile*
+docker-compose*
+README.md
+dist
+# NOTA: No incluyas .env para que se copie y se use en el build.

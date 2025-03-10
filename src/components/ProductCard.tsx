@@ -1,4 +1,3 @@
-
 import { Product } from "@/lib/types";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,12 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCardProps) => {
   const [quantity, setQuantity] = useState(0);
+
+  // Función para manejar la entrada manual de cantidad
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value, 10);
+    setQuantity(isNaN(val) ? 0 : val);
+  };
 
   if (compact) {
     return (
@@ -42,7 +47,13 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
               >
                 <Minus className="h-3 w-3" />
               </Button>
-              <span className="w-6 text-center text-sm">{quantity}</span>
+              <input
+                type="number"
+                min="0"
+                value={quantity}
+                onChange={handleInputChange}
+                className="w-12 text-center border rounded text-sm"
+              />
               <Button
                 variant="outline"
                 size="icon"
@@ -91,7 +102,13 @@ export const ProductCard = ({ product, onAddToCart, compact = false }: ProductCa
           >
             <Minus className="h-4 w-4" />
           </Button>
-          <span className="w-8 text-center">{quantity}</span>
+          <input
+            type="number"
+            min="0"
+            value={quantity}
+            onChange={handleInputChange}
+            className="w-12 text-center border rounded"
+          />
           <Button
             variant="outline"
             size="icon"

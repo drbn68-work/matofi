@@ -5,7 +5,7 @@ import { LogOut, Printer, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_URL = import.meta.env.VITE_API_URL
 
 interface OrderSummaryPageState {
   items: any[];
@@ -58,8 +58,10 @@ const OrderSummary = () => {
         })),
       };
 
+      console.log("Enviando pedido con payload:", payload); // <--- LOG
+
       await axios.post(`${API_URL}/sendOrder`, payload, { withCredentials: true });
-      
+
       // Toast de éxito con variant "default" (personaliza su estilo en CSS si es necesario)
       toast({
         variant: "default",
@@ -69,11 +71,10 @@ const OrderSummary = () => {
         className: "bg-green-200 text-green-900",
       });
 
-      // Esperar 5 segundos antes de hacer logout y redirigir
-      setTimeout(() => {
-        sessionStorage.clear();
-        window.location.href = "/login";
-      }, 3000);
+      // Redirige al Index, limpiando carret
+        sessionStorage.removeItem("cartItems"); 
+        navigate("/");
+
     } catch (error) {
       console.error("Error enviant la sol·licitud:", error);
       toast({
@@ -93,10 +94,11 @@ const OrderSummary = () => {
     toast({
       title: "Sessió tancada",
       description: "Has tancat la sessió correctament",
+      className: "bg-green-200 text-green-900",
     });
-    setTimeout(() => {
-      window.location.href = "/login";
-    }, 100);
+
+      window.location.href = "/";
+
   };
 
   if (!state) return null;
@@ -125,7 +127,7 @@ const OrderSummary = () => {
             Imprimir
           </Button>
           <Button onClick={handleSendOrder} variant="secondary" className="px-4 py-2">
-            Enviar sol·licitud a Compres
+            Enviar sol·licitud a Magatzem
           </Button>
           <Button onClick={handleLogout} variant="outline" className="px-4 py-2">
             <LogOut className="h-4 w-4 mr-1" />
@@ -142,39 +144,40 @@ const OrderSummary = () => {
               <tbody>
                 {state.userInfo.username && (
                   <tr className="border-b last:border-0">
-                    <td className="py-1 font-semibold w-1/3">Usuari (username)</td>
+                    <td className="py-1 font-semibold w-1/3 text-left">Usuari (username)</td>
                     <td className="py-1">{state.userInfo.username}</td>
                   </tr>
                 )}
                 <tr className="border-b last:border-0">
-                  <td className="py-1 font-semibold w-1/3">Nom complet</td>
+                  <td className="py-1 font-semibold w-1/3 text-left">Nom complet</td>
                   <td className="py-1">{state.userInfo.fullName}</td>
                 </tr>
                 <tr className="border-b last:border-0">
-                  <td className="py-1 font-semibold w-1/3">Departament</td>
+                  <td className="py-1 font-semibold w-1/3 text-left">Departament</td>
                   <td className="py-1">{state.userInfo.department}</td>
                 </tr>
                 <tr className="border-b last:border-0">
-                  <td className="py-1 font-semibold w-1/3">Correu electrònic</td>
+                  <td className="py-1 font-semibold w-1/3 text-left">Correu electrònic</td>
                   <td className="py-1">{state.userInfo.email}</td>
                 </tr>
                 <tr className="border-b last:border-0">
-                  <td className="py-1 font-semibold w-1/3">Centre de cost (CAI Petició)</td>
+                  <td className="py-1 font-semibold w-1/3 text-left">Centre de cost (CAI Petició)</td>
                   <td className="py-1">{state.userInfo.costCenter}</td>
                 </tr>
                 <tr className="border-b last:border-0">
-                  <td className="py-1 font-semibold w-1/3">Lloc de lliurament</td>
+                  <td className="py-1 font-semibold w-1/3 text-left">Lloc de lliurament</td>
                   <td className="py-1">{state.deliveryLocation}</td>
                 </tr>
                 {state.comments && (
                   <tr className="border-b last:border-0">
-                    <td className="py-1 font-semibold w-1/3">Comentaris</td>
+                    <td className="py-1 font-semibold w-1/3 text-left">Comentaris</td>
                     <td className="py-1">{state.comments}</td>
                   </tr>
                 )}
               </tbody>
             </table>
           </div>
+
 
           {/* Lista de artículos con filas compactas */}
           <div className="bg-gray-50 p-4 rounded-lg print:bg-white print:border">
@@ -187,7 +190,7 @@ const OrderSummary = () => {
                     <p className="text-xs text-gray-500">
                       SAP: {item.product.codsap} | AS400: {item.product.codas400}
                     </p>
-  
+
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium whitespace-nowrap text-xs">

@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matofi-backend
+  namespace: matofi
+  labels:
+    app: matofi-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: matofi-backend
+  template:
+    metadata:
+      labels:
+        app: matofi-backend
+    spec:
+      containers:
+      - name: matofi-backend
+        image: fpinformatica/fp-aplicaciones:matofi-backend
+        imagePullPolicy: Always    # <--- Añadido
+        ports:
+          - containerPort: 3000
+        envFrom:
+          - configMapRef:
+              name: matofi-config
+      imagePullSecrets:
+        - name: dockerhub-credentials

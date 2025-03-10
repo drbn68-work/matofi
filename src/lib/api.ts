@@ -1,8 +1,10 @@
 import axios from "axios";
 import { LoginCredentials, LoginResponse, Product } from "@/lib/types";
 
+// Verifica el valor de VITE_API_URL en tiempo de build
+console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL 
 
 
 const api = axios.create({
@@ -18,7 +20,7 @@ const api = axios.create({
 
 export const loginWithLDAP = async (credentials: LoginCredentials): Promise<LoginResponse> => {
   try {
-    console.log("Intentando autenticación LDAP con:", credentials);
+    console.log("Intentando autenticación LDAP");
     const response = await api.post('/auth/login', credentials);
     console.log("Respuesta del servidor LDAP:", response.data);
     if (!response.data || typeof response.data.success !== "boolean") {

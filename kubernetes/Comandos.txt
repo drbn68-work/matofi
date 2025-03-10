@@ -1,0 +1,47 @@
+
+#los comandos docker los hago en vscode en la raiz del proyecto (matofi). Los kubectl los hago en una ventana cmd (he bajado el kubeconfig)
+# Para no tener problemas podria borrar los dos deployments de kubernetes (matofi backend y frontend) y las dos imagene de docker hyb (matofi-backend y matofi-frontend)
+
+# 1. Eliminar recursos existentes de forma forzada (Si no los borra ante a mano en rancher)
+kubectl delete -f backend-deployment.yaml --grace-period=0 --force
+kubectl delete -f frontend-deployment.yaml --grace-period=0 --force
+# kubectl delete -f matofi-ingress.yaml --grace-period=0 --force      (este solo si hace falta)
+
+# 2. Construir las imágenes Docker
+#   - Para el backend, usamos la raíz como contexto, con Dockerfile en ./server
+docker build --no-cache -f ./server/Dockerfile -t matofi-backend:latest .
+#   - Para el frontend, el Dockerfile está en la raíz
+docker build --no-cache -t matofi-frontend:latest .
+
+
+docker login
+
+
+# 2.5  Borrar imagenes en dockerhub si quiero estar seguro del todo.
+
+# 3. Etiquetar y subir las imágenes a Docker Hub (debe esta en marcha mi docker desktop)
+#   (Cambia "matofi-backend" / "matofi-frontend" por la etiqueta que desees)
+docker tag matofi-backend:latest fpinformatica/fp-aplicaciones:matofi-backend
+docker push fpinformatica/fp-aplicaciones:matofi-backend   
+
+docker tag matofi-frontend:latest fpinformatica/fp-aplicaciones:matofi-frontend
+docker push fpinformatica/fp-aplicaciones:matofi-frontend 
+
+# 4. Aplicar el ConfigMap, los deployments y el Ingress. Ahora lo hago desde un cmd (he descargado kubeconfig)
+kubectl apply -f configmap-matofi.yaml
+kubectl apply -f backend-deployment.yaml
+kubectl apply -f frontend-deployment.yaml
+kubectl apply -f matofi-ingress.yaml
+
+# 5. Forzar el reinicio de los deployments para que usen las nuevas imágenes
+kubectl rollout restart deployment/matofi-backend -n matofi
+kubectl rollout restart deployment/matofi-frontend -n matofi
+
+# 6. Verificar el estado de los recursos en el namespace "matofi"
+kubectl get pods -n matofi
+kubectl get services -n matofi
+kubectl get ingress -n matofi
+
+# 7. Revisar los logs de los pods en caso de problemas
+kubectl logs -l app=matofi-backend -n matofi --tail=50
+kubectl logs -l app=matofi-frontend -n matofi --tail=50

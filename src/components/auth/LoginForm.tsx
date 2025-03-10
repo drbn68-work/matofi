@@ -59,7 +59,7 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
             costCenter: "" // se deja vacío para que el usuario lo complete
           };
           toast({
-            title: "Inici de sessió exitós",
+            title: "Inici de sessió realitzat correctament",
             description: `Benvingut, ${fakeUser.fullName}`,
           });
           // Guardamos el usuario en sessionStorage para que persista durante la sesión
@@ -92,7 +92,7 @@ export default function LoginForm({ onLoginSuccess, onError }: LoginFormProps) {
       if (success && user) {
         console.log("Autenticación exitosa:", user);
         toast({
-          title: "Inici de sessió exitós",
+          title: "Inici de sessió realitzat correctament",
           description: `Benvingut, ${user.fullName}`,
         });
         // Guardamos el usuario en sessionStorage para que persista durante la sesión

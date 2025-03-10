@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: matofi-config
+  namespace: matofi
+data:
+  VITE_API_URL: "https://matofi.local/api/"
+  LDAP_URL: "ldaps://192.168.100.50:636"
+  LDAP_BASE_DN: "CN=Users,DC=fp,DC=local"
+  LDAP_BIND_DN: "FP\\matofi_bind"
+  LDAP_BIND_CREDENTIALS: "!nUy980h7T!40<#s2MX9U^`Hlyp:&NL"
