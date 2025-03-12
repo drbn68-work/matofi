@@ -1,18 +1,23 @@
+// src/pages/Index.tsx
 import { useState, useEffect } from "react";
 import { getProducts, getCategories } from "@/lib/api"; // getProducts debe aceptar (page, pageSize, search, category)
-import { CartItem, Product, User } from "@/lib/types";
+import { Product, User } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { Toggle } from "@/components/ui/toggle";
 import { LayoutGrid, LayoutList } from "lucide-react";
-import { Header } from "@/components/layout/Header";
+import Header from "@/components/layout/Header";
 import { CategoryFilter } from "@/components/products/CategoryFilter";
 import { ProductGrid } from "@/components/products/ProductGrid";
 import { Pagination } from "@/components/products/Pagination";
+import { useCart } from "@/context/CartContext"; // <-- Importamos el contexto para el carrito
 
-// Definimos cuántos artículos traemos por página
 const ITEMS_PER_PAGE = 8;
 
-function getPagesToShow(currentPage: number, totalPages: number, maxVisible: number): number[] {
+function getPagesToShow(
+  currentPage: number,
+  totalPages: number,
+  maxVisible: number
+): number[] {
   const pages: number[] = [];
   if (totalPages <= maxVisible) {
     for (let i = 1; i <= totalPages; i++) {
@@ -44,12 +49,14 @@ interface IndexProps {
 export default function Index({ user }: IndexProps) {
   const { toast } = useToast();
 
-  // Estados para búsqueda, carret y categoría
+  // Usamos el contexto para el carrito (eliminamos el estado local)
+  const { cartItems, addToCart, removeFromCart, updateCartItem } = useCart();
+
+  // Estados para búsqueda y categoría
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  // Estados para campos adicionales
+  // Estados para campos adicionales (se guardan en sessionStorage como antes)
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [comments, setComments] = useState("");
 
@@ -64,12 +71,8 @@ export default function Index({ user }: IndexProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
 
-  // 1) Al montar, recuperar carret y campos adicionales de sessionStorage
+  // 1) Al montar, recuperar deliveryLocation y comments (NO el carrito) de sessionStorage
   useEffect(() => {
-    const storedCart = sessionStorage.getItem("cartItems");
-    if (storedCart) {
-      setCartItems(JSON.parse(storedCart));
-    }
     const storedDelivery = sessionStorage.getItem("deliveryLocation");
     if (storedDelivery) {
       setDeliveryLocation(storedDelivery);
@@ -122,15 +125,15 @@ export default function Index({ user }: IndexProps) {
     loadProducts();
   }, [currentPage, search, selectedCategory, toast]);
 
-  // 5) Reiniciamos a página 1 cuando cambia la búsqueda o la categoría
+  // 5) Reiniciamos la página 1 cuando cambia la búsqueda o la categoría
   useEffect(() => {
     setCurrentPage(1);
   }, [search, selectedCategory]);
 
-  // Lógica de logout: al hacer logout se borra el usuario y el carret de sessionStorage
+  // Lógica de logout: al hacer logout se borra el usuario y otros datos en sessionStorage
   const handleLogout = () => {
     sessionStorage.removeItem("user");
-    sessionStorage.removeItem("cartItems");
+    sessionStorage.removeItem("cartItems"); // Se puede eliminar, ya que el contexto lo maneja
     sessionStorage.removeItem("deliveryLocation");
     sessionStorage.removeItem("comments");
     sessionStorage.removeItem("costCenter");
@@ -144,26 +147,18 @@ export default function Index({ user }: IndexProps) {
     setTimeout(() => {
       window.location.href = "/";
     }, 500);
-
   };
 
-  // Funciones para el carret: guardar en sessionStorage cada vez que se modifique
+  // Funciones para el carrito: ahora usamos las funciones del contexto
   const handleAddToCart = (product: Product, quantity: number) => {
-    setCartItems((prev) => {
-      const existingItem = prev.find((item) => item.product.codsap === product.codsap);
-      let newCart: CartItem[];
-      if (existingItem) {
-        newCart = prev.map((item) =>
-          item.product.codsap === product.codsap
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      } else {
-        newCart = [...prev, { product, quantity }];
-      }
-      sessionStorage.setItem("cartItems", JSON.stringify(newCart));
-      return newCart;
-    });
+    const existingItem = cartItems.find(
+      (item) => item.product.codsap === product.codsap
+    );
+    if (existingItem) {
+      updateCartItem(product.codsap, existingItem.quantity + quantity);
+    } else {
+      addToCart({ product, quantity });
+    }
     toast({
       title: "Material afegit",
       description: `${quantity} x ${product.descripcion}`,
@@ -172,30 +167,20 @@ export default function Index({ user }: IndexProps) {
   };
 
   const handleRemoveFromCart = (productId: string) => {
-    setCartItems((prev) => {
-      const newCart = prev.filter((item) => item.product.codsap !== productId);
-      sessionStorage.setItem("cartItems", JSON.stringify(newCart));
-      return newCart;
-    });
+    removeFromCart(productId);
   };
 
   const handleUpdateCartQuantity = (productId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
-      handleRemoveFromCart(productId);
-      return;
+      removeFromCart(productId);
+    } else {
+      updateCartItem(productId, newQuantity);
     }
-    setCartItems((prev) => {
-      const newCart = prev.map((item) =>
-        item.product.codsap === productId ? { ...item, quantity: newQuantity } : item
-      );
-      sessionStorage.setItem("cartItems", JSON.stringify(newCart));
-      return newCart;
-    });
   };
 
-  // Al "checkout" no limpiamos el carret para preservar la información durante la sesión
+  // Al "checkout" no limpiamos el carrito para preservar la información durante la sesión
   const handleCheckout = () => {
-    // No se elimina el carret
+    // ...
   };
 
   // Paginación: calcular páginas visibles (máx. 5)
@@ -208,11 +193,8 @@ export default function Index({ user }: IndexProps) {
         onLogout={handleLogout}
         searchValue={search}
         onSearchChange={setSearch}
-        cartItems={cartItems}
-        onRemoveFromCart={handleRemoveFromCart}
-        onCheckout={handleCheckout}
-        onUpdateCartQuantity={handleUpdateCartQuantity}
         onCategorySelect={setSelectedCategory}
+        // No pasamos cartItems ni funciones de carrito, pues el Header usará el contexto
       />
 
       <main className="container pt-24">

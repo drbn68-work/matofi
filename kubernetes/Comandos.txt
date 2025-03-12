@@ -1,8 +1,7 @@
-
 #los comandos docker los hago en vscode en la raiz del proyecto (matofi). Los kubectl los hago en una ventana cmd (he bajado el kubeconfig)
-# Para no tener problemas podria borrar los dos deployments de kubernetes (matofi backend y frontend) y las dos imagene de docker hyb (matofi-backend y matofi-frontend)
+# Para no tener problemas podría borrar los dos deployments de Kubernetes (matofi backend y frontend) y las dos imágenes de https://hub.docker.com/ (matofi-backend y matofi-frontend)
 
-# 1. Eliminar recursos existentes de forma forzada (Si no los borra ante a mano en rancher)
+# 1. Eliminar recursos existentes de forma forzada (Si no los borras a mano en Rancher)
 kubectl delete -f backend-deployment.yaml --grace-period=0 --force
 kubectl delete -f frontend-deployment.yaml --grace-period=0 --force
 # kubectl delete -f matofi-ingress.yaml --grace-period=0 --force      (este solo si hace falta)
@@ -13,13 +12,9 @@ docker build --no-cache -f ./server/Dockerfile -t matofi-backend:latest .
 #   - Para el frontend, el Dockerfile está en la raíz
 docker build --no-cache -t matofi-frontend:latest .
 
-
 docker login
 
-
-# 2.5  Borrar imagenes en dockerhub si quiero estar seguro del todo.
-
-# 3. Etiquetar y subir las imágenes a Docker Hub (debe esta en marcha mi docker desktop)
+# 3. Etiquetar y subir las imágenes a Docker Hub (debe estar en marcha mi Docker Desktop)
 #   (Cambia "matofi-backend" / "matofi-frontend" por la etiqueta que desees)
 docker tag matofi-backend:latest fpinformatica/fp-aplicaciones:matofi-backend
 docker push fpinformatica/fp-aplicaciones:matofi-backend   
@@ -29,19 +24,89 @@ docker push fpinformatica/fp-aplicaciones:matofi-frontend
 
 # 4. Aplicar el ConfigMap, los deployments y el Ingress. Ahora lo hago desde un cmd (he descargado kubeconfig)
 kubectl apply -f configmap-matofi.yaml
+
+# 5. Aplicar los recursos de PostgreSQL:
+#    - PersistentVolumeClaim para la persistencia de datos
+kubectl apply -f postgres-pvc.yaml
+#    - Deployment para PostgreSQL (puedes usar StatefulSet en producción)
+kubectl apply -f postgres-deployment.yaml
+#    - Service para exponer PostgreSQL internamente
+kubectl apply -f postgres-service.yaml
+
+# 6. Aplicar los deployments de la aplicación y el Ingress
 kubectl apply -f backend-deployment.yaml
 kubectl apply -f frontend-deployment.yaml
 kubectl apply -f matofi-ingress.yaml
 
-# 5. Forzar el reinicio de los deployments para que usen las nuevas imágenes
+# 7. Forzar el reinicio de los deployments para que usen las nuevas imágenes y configuración
 kubectl rollout restart deployment/matofi-backend -n matofi
 kubectl rollout restart deployment/matofi-frontend -n matofi
 
-# 6. Verificar el estado de los recursos en el namespace "matofi"
+# 8. Verificar el estado de los recursos en el namespace "matofi"
 kubectl get pods -n matofi
 kubectl get services -n matofi
 kubectl get ingress -n matofi
 
-# 7. Revisar los logs de los pods en caso de problemas
+# 9. Revisar los logs de los pods en caso de problemas
 kubectl logs -l app=matofi-backend -n matofi --tail=50
 kubectl logs -l app=matofi-frontend -n matofi --tail=50
+
+
+# 10. Si quiero acceder al postgres del contenedor por pgAdmin, hacer esto: 
+Sí, puedes conectarte a ese Postgres usando pgAdmin (http://localhost:5050). Para hacerlo, una opción sencilla es usar el comando de port-forward para exponer temporalmente el servicio en tu máquina local. Por ejemplo, ejecuta:
+
+bash
+Copy
+kubectl port-forward svc/matofi-postgres 15432:5432 -n matofi
+Luego, en pgAdmin configura un nuevo servidor con:
+
+Host: localhost
+Puerto: 5432
+Usuario y contraseña: Los definidos en el Deployment (por ejemplo, user y password)
+Base de datos: matofi_db
+
+# 11. Tengo problemas para conectarme por pgAdmin. Lo hago directamente por erl shell del pod de Postgres:
+Para crear las tablas y aplicar el ALTER TABLE que usaste en tus pruebas, puedes hacerlo directamente desde la consola de psql a la que te conectaste en el pod. Sigue estos pasos:
+
+Abre el shell psql en el pod (ya lo lograste):
+
+bash
+Copy
+kubectl exec -it matofi-postgres-6cfd45f446-n7v9h -n matofi -- bash
+psql -U matofiuser -d matofi_db
+
+C:\Users\drobson\Desktop\Dev\code\matofi\kubernetes>kubectl exec -it matofi-postgres-6cfd45f446-n7v9h -n matofi -- bash
+psql -U matofiuser -d matofi_dbroot@matofi-postgres-6cfd45f446-n7v9h:/# psql -U matofiuser -d matofi_db
+psql (14.17 (Debian 14.17-1.pgdg120+1))
+Type "help" for help.
+
+matofi_db=# CREATE TABLE orders (
+matofi_db(#   id               uuid PRIMARY KEY,
+matofi_db(#   cost_center      varchar(50),
+matofi_db(#   full_name        varchar(100),
+matofi_db(#   department       varchar(100),
+matofi_db(#   email            varchar(100),
+matofi_db(#   delivery_location text,
+matofi_db(#   comments         text,
+matofi_db(#   created_at       timestamptz NOT NULL DEFAULT now()
+matofi_db(# );
+CREATE TABLE
+matofi_db=#
+matofi_db=# CREATE TABLE order_items (
+matofi_db(#   id          serial PRIMARY KEY,
+matofi_db(#   order_id    uuid REFERENCES orders(id) ON DELETE CASCADE,
+matofi_db(#   codsap      varchar(50),
+matofi_db(#   descripcion text,
+matofi_db(#   codas400    varchar(50),
+matofi_db(#   ubicacion   varchar(50),
+matofi_db(#   quantity    int
+matofi_db(# );
+CREATE TABLE
+matofi_db=# \dt
+             List of relations
+ Schema |    Name     | Type  |   Owner
+--------+-------------+-------+------------
+ public | order_items | table | matofiuser
+ public | orders      | table | matofiuser
+(2 rows)
+

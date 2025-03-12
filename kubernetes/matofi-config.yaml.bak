@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: matofi-config
+  namespace: matofi
+data:
+  PORT: "3000"
+  LDAP_URL: "ldaps://192.168.100.50:636"
+  LDAP_URL_FALLBACK: "ldap://192.168.100.68"
+  LDAP_BASE_DN: "CN=Users,DC=fp,DC=local"
+  LDAP_BIND_DN: "FP\\matofi_bind"
+  SKIP_LDAP_AUTH: "true"
+  SMTP_HOST: "azureconnect.fp.local"
+  SMTP_PORT: "25"
+  EMAIL_DESTINATARIO: "masaco@fundacio-puigvert.es"
+  VITE_API_URL: "https://matofi.fundacio-puigvert.es/api"

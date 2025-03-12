@@ -1,26 +1,45 @@
 // src/components/cart/CartReviewForm.tsx
 import React, { FocusEvent } from "react";
-import { CartReviewFormProps } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+// src/components/CartReviewForm.tsx
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Minus } from "lucide-react";
+import { useCart } from "@/context/CartContext"; // <-- Usamos el contexto para el carrito
 
 // Importa la lista centralizada de centros de coste, con .value y .label
 import { costCenters } from "@/constants/costCenters";
 
+interface CartReviewFormProps {
+  userInfo: {
+    username: string;
+    fullName: string;
+    department: string;
+    email: string;
+    costCenter?: string;
+  };
+  deliveryLocation: string;
+  comments: string;
+  onSubmit: () => void;
+  onDeliveryLocationChange: (value: string) => void;
+  onCommentsChange: (value: string) => void;
+  onCostCenterChange: (value: string) => void;
+  // Eliminamos las props de carrito ya que usaremos el contexto:
+  // items, onRemove, onUpdateQuantity
+}
+
 export const CartReviewForm = ({
-  items,
   userInfo,
   deliveryLocation,
   comments,
-  onRemove,
   onSubmit,
   onDeliveryLocationChange,
   onCommentsChange,
-  onUpdateQuantity,
   onCostCenterChange,
 }: CartReviewFormProps) => {
+  // Obtenemos los ítems y funciones del carrito desde el contexto
+  const { cartItems, removeFromCart, updateCartItem } = useCart();
+
   /**
    * Busca si existe un centro cuyo .label coincida con el texto escrito.
    * Devuelve ese mismo label si existe; en caso contrario, cadena vacía.
@@ -32,7 +51,7 @@ export const CartReviewForm = ({
 
   /**
    * Al cambiar el input (mientras se teclea o se selecciona del datalist),
-   * simplemente pasamos el valor sin validar. 
+   * simplemente pasamos el valor sin validar.
    */
   const handleCostCenterChange = (newValue: string) => {
     onCostCenterChange(newValue);
@@ -43,7 +62,7 @@ export const CartReviewForm = ({
    * - Si no coincide con ningún .label de la lista, lo limpiamos.
    * - Si sí coincide, lo dejamos.
    */
-  const handleCostCenterBlur = (e: FocusEvent<HTMLInputElement>) => {
+  const handleCostCenterBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const typedValue = e.target.value.trim();
     const validLabel = getCostCenterLabel(typedValue);
     if (!validLabel) {
@@ -129,7 +148,7 @@ export const CartReviewForm = ({
         <div className="space-y-2">
           <h3 className="font-medium">Articles sol·licitats</h3>
           <div className="space-y-2">
-            {items.map((item) => (
+            {cartItems.map((item) => (
               <div
                 key={item.product.codsap}
                 className="flex items-center justify-between py-2 border-b"
@@ -149,7 +168,7 @@ export const CartReviewForm = ({
                       size="icon"
                       className="h-6 w-6"
                       onClick={() =>
-                        onUpdateQuantity(item.product.codsap, item.quantity - 1)
+                        updateCartItem(item.product.codsap, item.quantity - 1)
                       }
                     >
                       <Minus className="h-3 w-3" />
@@ -162,7 +181,7 @@ export const CartReviewForm = ({
                       onChange={(e) => {
                         const newQuantity = parseInt(e.target.value, 10);
                         if (!isNaN(newQuantity) && newQuantity >= 0) {
-                          onUpdateQuantity(item.product.codsap, newQuantity);
+                          updateCartItem(item.product.codsap, newQuantity);
                         }
                       }}
                       className="w-12 text-center border rounded text-sm"
@@ -172,7 +191,7 @@ export const CartReviewForm = ({
                       size="icon"
                       className="h-6 w-6"
                       onClick={() =>
-                        onUpdateQuantity(item.product.codsap, item.quantity + 1)
+                        updateCartItem(item.product.codsap, item.quantity + 1)
                       }
                     >
                       <Plus className="h-3 w-3" />
@@ -182,7 +201,7 @@ export const CartReviewForm = ({
                     variant="ghost"
                     size="sm"
                     className="text-red-500 hover:text-red-600 h-6 text-xs px-2"
-                    onClick={() => onRemove(item.product.codsap)}
+                    onClick={() => removeFromCart(item.product.codsap)}
                   >
                     Eliminar
                   </Button>

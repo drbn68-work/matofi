@@ -1,11 +1,13 @@
+// src/pages/OrderSummary.tsx
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, Printer, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
+import { useCart } from "@/context/CartContext"; // Importamos el contexto
 
-const API_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL;
 
 interface OrderSummaryPageState {
   items: any[];
@@ -24,6 +26,7 @@ const OrderSummary = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { setCartItems } = useCart(); // Obtenemos la función para limpiar el carrito
   const state = location.state as OrderSummaryPageState;
 
   useEffect(() => {
@@ -33,8 +36,9 @@ const OrderSummary = () => {
     }
   }, [location.state, navigate]);
 
+  // Cambiado para ir a la ruta "/"
   const handleGoToIndex = () => {
-    navigate(-1);
+    navigate("/");
   };
 
   const handleSendOrder = async () => {
@@ -58,23 +62,25 @@ const OrderSummary = () => {
         })),
       };
 
-      console.log("Enviando pedido con payload:", payload); // <--- LOG
+      console.log("Enviando pedido con payload:", payload);
 
       await axios.post(`${API_URL}/sendOrder`, payload, { withCredentials: true });
 
-      // Toast de éxito con variant "default" (personaliza su estilo en CSS si es necesario)
       toast({
         variant: "default",
         title: "Correu enviat",
-        description: "La sol·licitud ha estat enviada al departament de compres",
+        description: "La sol·licitud ha estat enviada a Magatzem",
         duration: 3000,
         className: "bg-green-200 text-green-900",
       });
 
-      // Redirige al Index, limpiando carret
-        sessionStorage.removeItem("cartItems"); 
-        navigate("/");
+      // Limpiar el carrito usando el contexto
+      setCartItems([]);
 
+      // También puedes limpiar el item de sessionStorage si lo deseas
+      sessionStorage.removeItem("cartItems");
+
+      navigate("/");
     } catch (error) {
       console.error("Error enviant la sol·licitud:", error);
       toast({
@@ -96,9 +102,7 @@ const OrderSummary = () => {
       description: "Has tancat la sessió correctament",
       className: "bg-green-200 text-green-900",
     });
-
-      window.location.href = "/";
-
+    window.location.href = "/";
   };
 
   if (!state) return null;
@@ -137,7 +141,6 @@ const OrderSummary = () => {
 
         {/* Contenido principal */}
         <div className="space-y-8 mt-6">
-          {/* Información de la solicitud en tabla elegante */}
           <div className="bg-gray-50 p-4 rounded-lg print:bg-white print:border">
             <h2 className="text-lg font-semibold mb-4">Informació de la Sol·licitud</h2>
             <table className="w-full text-xs text-gray-700">
@@ -178,8 +181,6 @@ const OrderSummary = () => {
             </table>
           </div>
 
-
-          {/* Lista de artículos con filas compactas */}
           <div className="bg-gray-50 p-4 rounded-lg print:bg-white print:border">
             <h2 className="text-lg font-semibold mb-4">Articles Sol·licitats</h2>
             <div className="divide-y">
@@ -190,7 +191,6 @@ const OrderSummary = () => {
                     <p className="text-xs text-gray-500">
                       SAP: {item.product.codsap} | AS400: {item.product.codas400}
                     </p>
-
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium whitespace-nowrap text-xs">

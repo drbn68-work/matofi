@@ -1,46 +1,42 @@
+// src/components/layout/Header.tsx
+import React from "react";
 import { User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { CartPreview } from "@/components/CartPreview";
-import { CartItem } from "@/lib/types";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "@/context/CartContext";
 
 interface HeaderProps {
   user: User | null;
   onLogout: () => void;
   searchValue: string;
   onSearchChange: (value: string) => void;
-  cartItems: CartItem[];
-  onRemoveFromCart: (productId: string) => void;
-  onCheckout: () => void;
-  onUpdateCartQuantity: (productId: string, quantity: number) => void;
   onCategorySelect: (category: string | null) => void;
 }
 
-export const Header = ({
+const Header = ({
   user,
   onLogout,
   searchValue,
   onSearchChange,
-  cartItems,
-  onRemoveFromCart,
-  onCheckout,
-  onUpdateCartQuantity,
   onCategorySelect,
 }: HeaderProps) => {
   const navigate = useNavigate();
+  const { cartItems, removeFromCart, updateCartItem } = useCart();
 
-  // Manejador local para cambios en la barra de búsqueda
   const handleSearchChange = (value: string) => {
     onSearchChange(value);
-    // Cada vez que cambie la búsqueda, reseteamos la categoría
     onCategorySelect(null);
   };
 
-  // Manejador para ir al historial de pedidos
   const handleViewOrdersHistory = () => {
     navigate("/orders-history");
+  };
+
+  const handleViewTutorial = () => {
+    navigate("/tutorial");
   };
 
   return (
@@ -70,22 +66,28 @@ export const Header = ({
           <CartPreview
             items={cartItems}
             userInfo={user}
-            onRemove={onRemoveFromCart}
-            onCheckout={onCheckout}
-            onUpdateQuantity={onUpdateCartQuantity}
+            onRemove={removeFromCart}
+            onCheckout={() => {}}
+            onUpdateQuantity={updateCartItem}
           />
           {user && (
             <>
-              {/* Botón para ver historial, con estilo outline y tamaño pequeño */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleViewOrdersHistory}
                 className="hidden sm:inline-flex ml-2"
               >
-                Historial Pedidos
+                Historial
               </Button>
-
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleViewTutorial}
+                className="hidden sm:inline-flex ml-2"
+              >
+                Tutorial
+              </Button>
               <Button variant="ghost" size="icon" onClick={onLogout} className="ml-2">
                 <LogOut className="h-4 w-4" />
               </Button>
@@ -96,3 +98,5 @@ export const Header = ({
     </header>
   );
 };
+
+export default Header;

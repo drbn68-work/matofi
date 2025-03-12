@@ -7,14 +7,20 @@ import { HeaderSimple } from "@/components/layout/HeaderSimple";
 import { User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { useCart } from "@/context/CartContext";
+import { FaShoppingCart } from "react-icons/fa";
 
 export default function OrdersHistory() {
-  const [orders, setOrders] = useState([]);
-  const [expanded, setExpanded] = useState({});
+  const [orders, setOrders] = useState<any[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // Mapa para controlar qué pedido muestra el ícono en verde
+  const [cartFilledMap, setCartFilledMap] = useState<Record<string, boolean>>({});
+
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { cartItems, setCartItems } = useCart();
 
-  // Retrieve user from sessionStorage
+  // Recuperar el usuario desde sessionStorage
   const user: User | null = JSON.parse(sessionStorage.getItem("user") || "null");
   const department = sessionStorage.getItem("department");
   const API_URL = import.meta.env.VITE_API_URL;
@@ -24,7 +30,6 @@ export default function OrdersHistory() {
       navigate("/");
       return;
     }
-    console.log("El department és:", department);
 
     axios
       .get(`${API_URL}/orders?department=${encodeURIComponent(department)}`)
@@ -36,18 +41,15 @@ export default function OrdersHistory() {
       });
   }, [department, API_URL, navigate]);
 
-  // Parent-level logout function
   const handleLogout = () => {
     sessionStorage.clear();
     navigate("/");
   };
 
-  // Parent-level go-back function
   const handleGoBack = () => {
     navigate("/");
   };
 
-  // Expand/collapse for order items
   const toggleExpand = (orderId: string) => {
     setExpanded((prev) => ({
       ...prev,
@@ -55,46 +57,44 @@ export default function OrdersHistory() {
     }));
   };
 
-  // Copiar los ítems de un pedido al carret: sobrescribe la cantidad si ya existe
   const handleCopyToCart = (order: any) => {
-    // 1. Leer el carret actual
-    const storedCart = sessionStorage.getItem("cartItems");
-    let cart = storedCart ? JSON.parse(storedCart) : [];
+    let newCart = [...cartItems];
 
-    // 2. Recorrer los ítems del pedido y agregarlos al carret
     for (const item of order.items) {
-      // Reconstruir el objeto "product" según la estructura usada en Index.tsx
+      // Se agrega la propiedad 'categoria' al objeto product
       const product = {
         codsap: item.codsap,
         descripcion: item.descripcion,
         codas400: item.codas400,
         ubicacion: item.ubicacion,
-        // Agrega otros campos necesarios si los hay
+        categoria: item.categoria || "", // Valor por defecto si no existe
       };
 
-      // Buscar si ya existe en el carret
-      const existingItem = cart.find(
+      const existingIndex = newCart.findIndex(
         (cartItem: any) => cartItem.product.codsap === product.codsap
       );
 
-      if (existingItem) {
-        // Sobrescribe la cantidad con la del pedido
-        existingItem.quantity = item.quantity;
+      if (existingIndex > -1) {
+        newCart[existingIndex].quantity = item.quantity;
       } else {
-        cart.push({ product, quantity: item.quantity });
+        newCart.push({ product, quantity: item.quantity });
       }
     }
 
-    // 3. Guardar el carret actualizado
-    sessionStorage.setItem("cartItems", JSON.stringify(cart));
+    setCartItems(newCart);
 
-    // 4. Mostrar un toast de éxito
     toast({
       variant: "default",
-      title: "Comabnda copiada al carret",
+      title: "Comanda copiada al carret",
       description: "Els articles han estat afegits al teu carret.",
       className: "bg-green-200 text-green-900",
     });
+
+    // Solo el ícono de este pedido se pone verde durante 2s
+    setCartFilledMap((prev) => ({ ...prev, [order.id]: true }));
+    setTimeout(() => {
+      setCartFilledMap((prev) => ({ ...prev, [order.id]: false }));
+    }, 2000);
   };
 
   if (!orders.length) {
@@ -118,7 +118,6 @@ export default function OrdersHistory() {
         <h1 className="text-xl font-bold mb-6">
           Històric de comandes sol·licitades des del CAI de l'usuari
         </h1>
-
         <div className="grid grid-cols-1 gap-4">
           {orders.map((order: any) => {
             const isExpanded = expanded[order.id] || false;
@@ -129,10 +128,7 @@ export default function OrdersHistory() {
               >
                 <div className="flex flex-col gap-1 mb-3">
                   <p className="text-gray-900 font-semibold">
-                    ID:{" "}
-                    <span className="font-normal text-gray-800">
-                      {order.id}
-                    </span>
+                    ID: <span className="font-normal text-gray-800">{order.id}</span>
                   </p>
                   {order.full_name && (
                     <p className="text-gray-900 font-semibold">
@@ -167,13 +163,18 @@ export default function OrdersHistory() {
                         ? "Amagar articles"
                         : `Mostra articles (${order.items.length})`}
                     </Button>
-
                     <Button
                       onClick={() => handleCopyToCart(order)}
                       variant="primary"
                       size="sm"
+                      className="flex items-center gap-2"
                     >
-                      Copiar al carret
+                      <FaShoppingCart
+                        className={`h-4 w-4 ${
+                          cartFilledMap[order.id] ? "text-green-600" : "text-white"
+                        }`}
+                      />
+                      <span>Copiar al carret</span>
                     </Button>
                   </div>
                 )}
@@ -184,9 +185,7 @@ export default function OrdersHistory() {
                       <li key={item.id}>
                         <span className="font-medium">{item.quantity}x</span>{" "}
                         {item.descripcion}{" "}
-                        <span className="text-gray-500">
-                          (SAP: {item.codsap})
-                        </span>
+                        <span className="text-gray-500">(SAP: {item.codsap})</span>
                       </li>
                     ))}
                   </ul>
