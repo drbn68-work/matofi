@@ -1,4 +1,3 @@
-// src/components/layout/Header.tsx
 import React from "react";
 import { User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
@@ -39,13 +38,18 @@ const Header = ({
     navigate("/tutorial");
   };
 
+  const handleViewUploadExcel = () => {
+    navigate("/upload-excel");
+  };
+
   return (
     <header className="fixed top-0 z-10 w-full border-b bg-white/80 backdrop-blur-md">
       <div className="container flex items-center justify-between py-4">
+        {/* Left Section: Logo and User Name */}
         <div className="flex items-center gap-6">
-          <img
-            src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png"
-            alt="Fundació Puigvert"
+          <img 
+            src="/lovable-uploads/70d83c98-5a0d-49cd-854d-2029b792990b.png" 
+            alt="Fundació Puigvert" 
             className="h-12"
           />
           {user && (
@@ -57,10 +61,14 @@ const Header = ({
           )}
         </div>
 
-        <h1 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl font-bold text-primary">
-          Material d'Oficina
-        </h1>
+        {/* Center Section: Title */}
+        <div className="flex-1 text-center">
+          <h1 className="text-2xl font-bold text-primary">
+            Material d'Oficina
+          </h1>
+        </div>
 
+        {/* Right Section: Actions */}
         <div className="flex items-center gap-4">
           <SearchBar value={searchValue} onChange={handleSearchChange} />
           <CartPreview
@@ -88,6 +96,16 @@ const Header = ({
               >
                 Tutorial
               </Button>
+              {user.isAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleViewUploadExcel}
+                  className="hidden sm:inline-flex ml-2"
+                >
+                  Pujar Catàleg
+                </Button>
+              )}
               <Button variant="ghost" size="icon" onClick={onLogout} className="ml-2">
                 <LogOut className="h-4 w-4" />
               </Button>

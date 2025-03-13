@@ -1,6 +1,6 @@
 // src/components/CartPreview.tsx
 import React, { useState, useEffect } from "react";
-import { CartItem } from "@/lib/types";
+import { CartItem, User } from "@/lib/types";
 import {
   Sheet,
   SheetContent,
@@ -12,12 +12,11 @@ import { useToast } from "@/hooks/use-toast";
 import { CartCounter } from "./cart/CartCounter";
 import { CartOrderConfirmation } from "./cart/CartOrderConfirmation";
 import { CartReviewForm } from "./cart/CartReviewForm";
-import { UserInfo } from "./cart/types";
 import { useNavigate } from "react-router-dom";
 
 interface CartPreviewProps {
   items: CartItem[];
-  userInfo: UserInfo;
+  userInfo: User;
   onRemove: (productId: string) => void;
   onCheckout: () => void;
   onUpdateQuantity: (productId: string, quantity: number) => void;
@@ -33,20 +32,22 @@ export const CartPreview = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Estados para los campos a persistir
+  // States for persisting fields
   const [deliveryLocation, setDeliveryLocation] = useState("");
   const [comments, setComments] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedItems, setSubmittedItems] = useState<CartItem[]>([]);
 
-  // Estado local para userInfo, añadiendo department y costCenter inicial vacío
-  const [localUserInfo, setLocalUserInfo] = useState<UserInfo>({
+  // Local state for userInfo, adding department and costCenter with initial empty values if needed.
+  // Now using the User interface instead of UserInfo.
+  const [localUserInfo, setLocalUserInfo] = useState<User>({
     ...userInfo,
-    department: userInfo.department || "", // Asegúrate de que 'department' existe en 'UserInfo'
-    costCenter: "",
+    department: userInfo.department || "",
+    costCenter: "", // Set empty by default
+    isAdmin: userInfo.isAdmin || false,
   });
 
-  // Recuperar datos persistidos de sessionStorage al montar
+  // Retrieve persisted data from sessionStorage on mount
   useEffect(() => {
     const storedCostCenter = sessionStorage.getItem("costCenter");
     if (storedCostCenter) {
@@ -63,14 +64,14 @@ export const CartPreview = ({
       setComments(storedComments);
     }
 
-    // Recuperar el department de sessionStorage
+    // Retrieve the department from sessionStorage
     const storedDepartment = sessionStorage.getItem("department");
     if (storedDepartment) {
       setLocalUserInfo((prev) => ({ ...prev, department: storedDepartment }));
     }
   }, []);
 
-  // Escuchar el evento "pageshow" para volver a cargar costCenter y department si se navega hacia atrás
+  // Listen for the "pageshow" event to reload costCenter and department if navigating back
   useEffect(() => {
     const handlePageShow = () => {
       const storedCostCenter = sessionStorage.getItem("costCenter");
@@ -87,7 +88,7 @@ export const CartPreview = ({
     return () => window.removeEventListener("pageshow", handlePageShow);
   }, []);
 
-  // Guardar en sessionStorage cuando cambien costCenter, department, deliveryLocation y comments
+  // Save to sessionStorage when costCenter, department, deliveryLocation, or comments change
   useEffect(() => {
     sessionStorage.setItem("costCenter", localUserInfo.costCenter);
   }, [localUserInfo.costCenter]);
@@ -104,7 +105,7 @@ export const CartPreview = ({
     sessionStorage.setItem("comments", comments);
   }, [comments]);
 
-  // Función para actualizar costCenter (se delega la validación en CartReviewForm)
+  // Function to update costCenter (delegates validation to CartReviewForm)
   const handleCostCenterChange = (value: string) => {
     setLocalUserInfo((prev) => ({ ...prev, costCenter: value }));
   };

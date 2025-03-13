@@ -14,16 +14,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * 📌 Ruta correcta del archivo Excel
+ * Use environment variable EXCEL_PUBLIC_FOLDER if defined,
+ * otherwise default to the local relative path.
  */
-const excelPath = path.join(__dirname, "../../public/catalogomatofi.xlsx");
-console.log("Intentando cargar el Excel desde:", excelPath);
+const publicFolder = process.env.EXCEL_PUBLIC_FOLDER || path.join(__dirname, "../../public");
+
+/**
+ * 📌 Ruta correcta del archivo Excel usando publicFolder
+ */
+const excelPath = path.join(publicFolder, "catalogomatofi.xlsx");
+console.log("Intentando cargar el Excel des d:", excelPath);
 
 /**
  * 🗂 Configurar `multer` para manejar la subida del archivo Excel
  */
 const storage = multer.diskStorage({
-  destination: path.join(__dirname, "../../public/"), // 📌 Aseguramos que la carpeta sea relativa
+  destination: publicFolder, // Usar la carpeta definida
   filename: (req, file, cb) => {
     cb(null, "catalogomatofi.xlsx"); // Sobreescribe el archivo existente
   },
@@ -47,43 +53,27 @@ router.post("/upload-excel", upload.single("excel"), (req, res) => {
  * 🔄 Función para leer el archivo Excel en cada solicitud
  */
 function readExcelFile() {
-  // Define la ruta absoluta donde se copia el archivo en el contenedor
- // Primero, intenta la ruta absoluta (por ejemplo, en el contenedor Docker)
- let excelPath = "/app/public/catalogomatofi.xlsx";
- if (!fs.existsSync(excelPath)) {
-   // Si la ruta absoluta no existe, se usa la ruta relativa para entornos locales
-   excelPath = path.join(__dirname, "../../public/catalogomatofi.xlsx");
- }
-  console.log("Intentando cargar el Excel desde:", excelPath);
+  // Define la ruta absoluta usando publicFolder
+  let excelPathToRead = path.join(publicFolder, "catalogomatofi.xlsx");
+  console.log("Intentando cargar el Excel des d:", excelPathToRead);
 
-  if (!fs.existsSync(excelPath)) {
-    console.error("❌ El archivo Excel no existe:", excelPath);
+  if (!fs.existsSync(excelPathToRead)) {
+    console.error("❌ El archivo Excel no existe:", excelPathToRead);
     return null;
   }
 
   try {
     console.log("✅ El archivo Excel existe. Leyendo...");
-    const workbook = XLSX.readFile(excelPath);
-    console.log("Hojas encontradas:", workbook.SheetNames);
-
+    const workbook = XLSX.readFile(excelPathToRead);
     const sheetName = workbook.SheetNames[0];
-    console.log("Usando la hoja:", sheetName);
-
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-
-    console.log("Datos leídos (formato de array bidimensional):", data.slice(0, 10));
-    // Mostramos solo las primeras 10 filas para no saturar la consola
-
     return data;
   } catch (error) {
     console.error("⚠️ Error leyendo el archivo Excel:", error);
     return null;
   }
 }
-
-
-
 
 /**
  * 🚀 `GET /api/categories`
@@ -175,7 +165,6 @@ router.get("/products", (req, res) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
-
 
 /**
  * 🔄 Función para mapear filas del Excel a objetos con cabecera

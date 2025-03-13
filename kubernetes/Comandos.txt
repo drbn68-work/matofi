@@ -6,6 +6,12 @@ kubectl delete -f backend-deployment.yaml --grace-period=0 --force
 kubectl delete -f frontend-deployment.yaml --grace-period=0 --force
 # kubectl delete -f matofi-ingress.yaml --grace-period=0 --force      (este solo si hace falta)
 
+
+
+
+
+
+
 # 2. Construir las imágenes Docker
 #   - Para el backend, usamos la raíz como contexto, con Dockerfile en ./server
 docker build --no-cache -f ./server/Dockerfile -t matofi-backend:latest .
@@ -22,32 +28,71 @@ docker push fpinformatica/fp-aplicaciones:matofi-backend
 docker tag matofi-frontend:latest fpinformatica/fp-aplicaciones:matofi-frontend
 docker push fpinformatica/fp-aplicaciones:matofi-frontend 
 
-# 4. Aplicar el ConfigMap, los deployments y el Ingress. Ahora lo hago desde un cmd (he descargado kubeconfig)
-kubectl apply -f configmap-matofi.yaml
 
-# 5. Aplicar los recursos de PostgreSQL:
-#    - PersistentVolumeClaim para la persistencia de datos
+
+
+
+
+
+
+
+
+
+
+
+# 4. Aplicar el ConfigMap, los deployments y el Ingress. Ahora lo hago desde un cmd (he descargado kubeconfig)
+# 1. (Optional) Docker credentials, if your cluster needs them to pull images
+# kubectl apply -f dockerhub-credentials.yaml
+
+# 2. Secrets and config
+kubectl apply -f matofi-secrets.yaml
+kubectl apply -f matofi-postgres-secret.yaml
+kubectl apply -f matofi-config.yaml
+# kubectl apply -f cert-secret.yaml  # If you use a TLS cert for your Ingress
+
+# 3. PostgreSQL resources
 kubectl apply -f postgres-pvc.yaml
-#    - Deployment para PostgreSQL (puedes usar StatefulSet en producción)
 kubectl apply -f postgres-deployment.yaml
-#    - Service para exponer PostgreSQL internamente
 kubectl apply -f postgres-service.yaml
 
-# 6. Aplicar los deployments de la aplicación y el Ingress
+# 3.1. Excel resources
+kubectl apply -f excel-pvc.yaml
+
+
+# 4. Backend and Frontend
 kubectl apply -f backend-deployment.yaml
+kubectl apply -f backend-service.yaml
 kubectl apply -f frontend-deployment.yaml
+kubectl apply -f frontend-service.yaml
+
+# 5. Ingress
 kubectl apply -f matofi-ingress.yaml
 
-# 7. Forzar el reinicio de los deployments para que usen las nuevas imágenes y configuración
+# 6. Restart the deployments (if needed) to ensure they pick up new config
 kubectl rollout restart deployment/matofi-backend -n matofi
 kubectl rollout restart deployment/matofi-frontend -n matofi
 
-# 8. Verificar el estado de los recursos en el namespace "matofi"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 7. Check status
 kubectl get pods -n matofi
 kubectl get services -n matofi
 kubectl get ingress -n matofi
 
-# 9. Revisar los logs de los pods en caso de problemas
+# 8. View logs if needed
 kubectl logs -l app=matofi-backend -n matofi --tail=50
 kubectl logs -l app=matofi-frontend -n matofi --tail=50
 

@@ -55,7 +55,7 @@ class LDAPService {
         bindDN: currentConfig.bindDN,
         bindCredentials: currentConfig.bindCredentials
       });
-  
+
       // Bind inicial con la cuenta de servicio
       client.bind(currentConfig.bindDN, currentConfig.bindCredentials, (bindErr) => {
         if (bindErr) {
@@ -64,11 +64,12 @@ class LDAPService {
         }
         console.log("✅ Bind inicial exitoso con", currentConfig.bindDN);
 
-        // Búsqueda por sAMAccountName, solicitando atributos adicionales
+        // Búsqueda por sAMAccountName, solicitando atributos adicionales,
+        // Use "employeeNumber" (capital N) to match your LDAP screenshot
         const searchOptions = {
           scope: 'sub',
           filter: `(sAMAccountName=${username})`,
-          attributes: ['dn', 'cn', 'sAMAccountName', 'mail', 'department']
+          attributes: ['dn', 'cn', 'sAMAccountName', 'mail', 'department', 'employeeNumber']
         };
 
         client.search(currentConfig.baseDN, searchOptions, (searchErr, res) => {
@@ -121,11 +122,18 @@ class LDAPService {
               console.error("❌ Error: `userDN` o `password` no son cadenas válidas", { userDN, password });
               return reject(new Error('Error interno: Formato inválido de credenciales'));
             }
-            
+
+            // Admin check: use environment variable ADMIN_EMPLOYEES (e.g., "133,6912,625")
+            const adminEmployeeNumbersStr = process.env.ADMIN_EMPLOYEES || "";
+            const adminEmployeeNumbers = adminEmployeeNumbersStr.split(",").map(num => num.trim());
+            // Check both 'employeeNumber' and 'employeenumber'
+            const isAdmin = adminEmployeeNumbers.includes(String(entryData.employeeNumber || entryData.employeenumber));
+
+
             // En lugar de usar el DN obtenido, se construye un simple DN: "fp\<username>"
             const simpleDN = `fp\\${username}`;
             console.log("🔑 Intentando autenticar con DN simple:", simpleDN);
-            
+
             // Modo pruebas: si SKIP_LDAP_AUTH está activado, se omite la validación de la contraseña.
             if (process.env.SKIP_LDAP_AUTH === "true") {
               console.log("⚠️ Modo pruebas activado: se omite la validación de la contraseña.");
@@ -137,11 +145,12 @@ class LDAPService {
                   fullName: entryData.cn,
                   department: entryData.department || "",
                   email: entryData.mail || "",
-                  costCenter: ""  // Se deja vacío para que el usuario lo complete posteriormente
+                  costCenter: "",  // Se deja vacío para que el usuario lo complete posteriormente
+                  isAdmin: isAdmin
                 }
               });
             }
-            
+
             // Bind con las credenciales del usuario usando el simple DN
             client.bind(simpleDN, password, (err) => {
               client.unbind();
@@ -158,7 +167,8 @@ class LDAPService {
                   fullName: entryData.cn,
                   department: entryData.department || "",
                   email: entryData.mail || "",
-                  costCenter: ""  // Se deja vacío para que el usuario lo complete posteriormente
+                  costCenter: "",  // Se deja vacío para que el usuario lo complete posteriormente
+                  isAdmin: isAdmin
                 }
               });
             });

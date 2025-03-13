@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import NotFound from "@/pages/NotFound";
-import OrderSummary from "@/pages/OrderSummary";
+import OrderSummary from "@/pages/OrderSummary";  
 import OrdersHistory from "@/pages/OrdersHistory";
 import Tutorial from "@/pages/Tutorial";
 import { Toaster } from "@/components/ui/toaster";
+// Corrected import paths:
 import UploadExcel from "@/components/UploadExcel";
 import ExcelViewer from "@/components/ExcelViewer";
 import { CartProvider } from "@/context/CartContext";
@@ -34,6 +35,18 @@ export default function App() {
 
   // Convertir la cadena JSON en un objecte
   const parsedUser = user ? JSON.parse(user) : null;
+
+  // Define a global logout if you want to pass it to UploadExcel, ExcelViewer, etc.
+  const handleLogout = () => {
+    console.log("Global handleLogout called");
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("cartItems");
+    sessionStorage.removeItem("deliveryLocation");
+    sessionStorage.removeItem("comments");
+    sessionStorage.removeItem("costCenter");
+    sessionStorage.clear();
+    window.location.href = "/";
+  };
 
   return (
     <CartProvider>
@@ -66,7 +79,7 @@ export default function App() {
             }
           />
 
-          {/* Nova ruta per a l'historial de comandes */}
+          {/* Nova ruta per a l'històric de comandes */}
           <Route
             path="/orders-history"
             element={
@@ -91,7 +104,7 @@ export default function App() {
             path="/upload-excel"
             element={
               <PrivateRoute user={user}>
-                <UploadExcel />
+                <UploadExcel user={parsedUser} onLogout={handleLogout} />
               </PrivateRoute>
             }
           />
@@ -101,7 +114,7 @@ export default function App() {
             path="/catalog"
             element={
               <PrivateRoute user={user}>
-                <ExcelViewer />
+                <ExcelViewer user={parsedUser} onLogout={handleLogout} />
               </PrivateRoute>
             }
           />

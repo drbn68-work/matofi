@@ -9,7 +9,7 @@ data:
   LDAP_URL_FALLBACK: "ldap://192.168.100.68"
   LDAP_BASE_DN: "CN=Users,DC=fp,DC=local"
   LDAP_BIND_DN: "FP\matofi_bind"
-  SKIP_LDAP_AUTH: "true"
+  SKIP_LDAP_AUTH: "false"
   SMTP_HOST: "azureconnect.fp.local"
   SMTP_PORT: "25"
   EMAIL_DESTINATARIO: "masaco@fundacio-puigvert.es"

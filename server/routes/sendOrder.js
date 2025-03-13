@@ -184,9 +184,9 @@ router.post("/sendOrder", async (req, res) => {
 
     // Ara que la comanda està inserida a la BD, enviar el correu al departament
     const mailOptionsDept = {
-      from: "matofi@fundacio-puigvert.es",
+      from: "masaco@fundacio-puigvert.es",
       to: process.env.EMAIL_DESTINATARI,
-      cc: "drobson@fundacio-puigvert.es",
+      bcc: "drobson@fundacio-puigvert.es",
       subject: `Comanda pel CAI ${userInfo.costCenter}`,
       html,
     };

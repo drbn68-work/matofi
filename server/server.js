@@ -18,8 +18,10 @@ const port = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 📌 RUTA RELATIVA para el archivo Excel
-const excelPath = path.join(__dirname, "../public/catalogomatofi.xlsx");
+// Use EXCEL_PUBLIC_FOLDER if defined, otherwise default to "../public"
+const excelPublicFolder = process.env.EXCEL_PUBLIC_FOLDER || path.join(__dirname, "../public");
+// 📌 Ruta correcta para el archivo Excel
+const excelPath = path.join(excelPublicFolder, "catalogomatofi.xlsx");
 console.log("Intentando cargar el Excel desde:", excelPath);
 
 // Configurar CORS para permitir el envío de cookies

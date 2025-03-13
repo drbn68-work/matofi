@@ -15,6 +15,7 @@ export interface User {
   costCenter: string;  // Campo para el centre de cost
   department: string;
   email: string;
+  isAdmin: boolean;
 }
 
 // Item del carret
@@ -60,3 +61,13 @@ export interface CartOrderConfirmationProps {
   deliveryLocation: string;
   comments: string;
 }
+
+
+export interface CartContextType {
+  items: CartItem[];
+  addItem: (item: CartItem) => void;
+  removeItem: (productId: string) => void;
+  clearCart: () => void;
+  updateQuantity: (productId: string, quantity: number) => void;
+}
+

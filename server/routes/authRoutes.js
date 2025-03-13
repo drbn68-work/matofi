@@ -31,12 +31,14 @@ router.post('/login', async (req, res) => {
 
     // Generar token JWT con los datos esenciales del usuario,
     // sin usar 'id' ya que el LDAP no lo proporciona, y dejando costCenter vacío.
+    // Añadimos isAdmin para que el frontend sepa si es admin.
     const tokenPayload = {
       username: result.user.username,
       fullName: result.user.fullName,
       department: result.user.department,
       email: result.user.email,
-      costCenter: result.user.costCenter  // Se espera que sea "" (vacío)
+      costCenter: result.user.costCenter, // Se espera que sea "" (vacío)
+      isAdmin: result.user.isAdmin        
     };
 
     const jwtSecret = process.env.JWT_SECRET || 'defaultSecret';
