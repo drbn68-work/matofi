@@ -4,6 +4,21 @@ Este repositorio contiene la aplicación Matofi, un sistema listo para producci�
 
 ---
 
+# Clonar
+Ojo, al pasar a Orgnizacion de Github, ya no e s drbn68/matofi.git sino drbn68-work/matofi.git. Para clonarlo en una carpeta de windows, hacer esto:
+Clonar los Repositorios en Tu PC (Opcional)
+Si ya tienes los repos en tu PC, necesitarás actualizar los enlaces remotos en Git.
+
+Abre una terminal y ve al directorio del repositorio:
+
+cd /ruta/a/tu/repositorio
+Actualiza la URL del remoto:
+git remote set-url origin https://github.com/drbn68-work/mi-repo.git
+
+Verifica que todo funciona:
+git fetch origin
+git pull origin main
+
 ## Tabla de Contenido
 
 - [Descripción General](#descripción-general)
