@@ -126,6 +126,68 @@ router.post("/sendOrder", async (req, res) => {
       </table>
     `;
 
+
+
+
+     // 📨 HTML del correu per al **usuari** (NO inclou ubicació)
+
+     let htmlUser = `
+
+     ${styleBlock}
+
+     <h2>Confirmació de la teva sol·licitud de material</h2>
+
+     <p>Hola ${userInfo.fullName},</p>
+
+     <p>La teva sol·licitud s'ha enviat correctament.</p>
+
+     <p><strong>ID del pedido:</strong> ${orderId}</p>
+
+     <p>Pots revisar el teu historial per veure tots els teus pedidos.</p>
+
+     
+
+     <h3>Articles Sol·licitats</h3>
+
+     <table class="compact-table">
+
+       <thead>
+
+         <tr><th>Check</th><th>Descripció</th><th>SAP</th><th>AS400</th><th>Quantitat</th></tr>
+
+       </thead>
+
+       <tbody>`;
+
+
+
+   items.forEach((item) => {
+
+     htmlUser += `
+
+       <tr>
+
+         <td><input type="checkbox" /></td>
+
+         <td>${item.descripcion || ""}</td>
+
+         <td>${item.codsap || ""}</td>
+
+         <td>${item.codas400 || ""}</td>
+
+         <td style="text-align: right;">${item.quantity || ""}</td>
+
+       </tr>`;
+
+   });
+
+
+
+   htmlUser += `</tbody></table>`;
+
+
+
+
     // Inserir la capçalera de la comanda a la taula "orders"
     await pool.query(
       `INSERT INTO orders (
@@ -191,9 +253,33 @@ router.post("/sendOrder", async (req, res) => {
       html,
     };
 
+
+       // 📨 Enviar correu al usuari
+
+       const mailOptionsUser = {
+
+        from: "masaco@fundacio-puigvert.es",
+  
+        to: userInfo.email,
+        bcc: "drobson@fundacio-puigvert.es",
+  
+        subject: `Confirmació de comanda - CAI ${userInfo.costCenter}`,
+  
+        html: htmlUser,
+  
+      };
+
+
+
+
     try {
       const mailResultDept = await transporter.sendMail(mailOptionsDept);
       console.log("Correu enviat al departament:", mailResultDept);
+
+      // Enviar el correu al usuari
+      const mailResultUser = await transporter.sendMail(mailOptionsUser);
+      console.log("Correu enviat al usuari:", mailResultUser);
+      
       return res.status(201).json({
         success: true,
         message: "Comanda guardada i correu enviat correctament",

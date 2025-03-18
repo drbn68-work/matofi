@@ -12,5 +12,5 @@ data:
   SKIP_LDAP_AUTH: "false"
   SMTP_HOST: "azureconnect.fp.local"
   SMTP_PORT: "25"
-  EMAIL_DESTINATARIO: "masaco@fundacio-puigvert.es"
+  EMAIL_DESTINATARI: "masaco@fundacio-puigvert.es"
   VITE_API_URL: "https://matofi.fundacio-puigvert.es/api"
